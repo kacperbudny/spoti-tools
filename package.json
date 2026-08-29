@@ -8,6 +8,7 @@
     "start": "bun run --bun next start",
     "lint": "biome check",
     "format": "biome format --write",
+    "typecheck": "SKIP_ENV_VALIDATION=1 bun run --bun next typegen && tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",

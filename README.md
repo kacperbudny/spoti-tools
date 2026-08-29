@@ -11,7 +11,7 @@ Toolbox for Spotify, with things I find useful.
 
 ## Live Preview
 
-TBD
+🔗 [View live site](https://spoti-tools.vercel.app/)
 
 ## Setup
 
@@ -50,4 +50,6 @@ bun dev
 - **Linter/formatter**: Biome
 - **Framework**: Next.js (App Router)
 - **UI library**: React
-- **Styling**: Tailwind
+- **Styling**: Tailwind + shadcn + BaseUI
+- **Database**: Neon + Drizzle
+- **Validation**: zod
