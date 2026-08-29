@@ -1,0 +1,10 @@
+{
+  "name": "SpotiTools",
+  "install": "./.cursor/install.sh",
+  "terminals": [
+    {
+      "name": "next-dev",
+      "command": "bun dev"
+    }
+  ]
+}
