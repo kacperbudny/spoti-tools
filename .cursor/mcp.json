@@ -7,6 +7,9 @@
     "drizzle": {
       "command": "bunx",
       "args": ["drizzle-kit", "mcp"]
+    },
+    "better-auth": {
+      "url": "https://mcp.better-auth.com/mcp"
     }
   }
 }
