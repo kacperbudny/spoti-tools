@@ -13,6 +13,7 @@
       "!.next",
       "!dist",
       "!build",
+      "!drizzle",
       "!.agents",
       "!.cursor"
     ]
@@ -30,7 +31,20 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "patterns": [
+              {
+                "group": ["./*", "./**", "../*", "../**"],
+                "message": "Use the @/ alias instead of a relative import."
+              }
+            ]
+          }
+        }
+      }
     },
     "domains": {
       "next": "recommended",

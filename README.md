@@ -39,7 +39,7 @@ bun install
 bun dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. Open [http://127.0.0.1:3000](http://127.0.0.1:3000). Do not use `localhost` due to Spotify's quirkyness about it.
 
 ## Tech stack
 
@@ -53,3 +53,4 @@ bun dev
 - **Styling**: Tailwind + shadcn + BaseUI
 - **Database**: Neon + Drizzle
 - **Validation**: zod
+- **Auth**: BetterAuth + Spotify

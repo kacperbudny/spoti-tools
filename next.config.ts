@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
-import "./src/env";
+import "@/env";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  allowedDevOrigins: ["127.0.0.1"],
   reactCompiler: true,
 };
 
