@@ -1,0 +1,48 @@
+import type { Album } from "@/lib/random-album/album";
+import type { LoadLibraryResult } from "@/lib/random-album/library-source";
+
+export type StartProgressEvent = {
+  type: "progress";
+  loaded: number;
+  total: number;
+};
+
+export type StartCompleteEvent = {
+  type: "complete";
+  library: Album[];
+  pick: Album | null;
+};
+
+export type StartErrorEvent = {
+  type: "error";
+  reason: "spotify-failed";
+  message: string;
+};
+
+export type StartSessionDeadEvent = {
+  type: "session-dead";
+};
+
+export type StartStreamEvent =
+  | StartProgressEvent
+  | StartCompleteEvent
+  | StartErrorEvent
+  | StartSessionDeadEvent;
+
+export function encodeStartStreamEvent(event: StartStreamEvent): Uint8Array {
+  return new TextEncoder().encode(`${JSON.stringify(event)}\n`);
+}
+
+export function toStartError(
+  result: Extract<LoadLibraryResult, { ok: false }>,
+): StartErrorEvent | StartSessionDeadEvent {
+  if (result.reason === "session-dead") {
+    return { type: "session-dead" };
+  }
+
+  return {
+    type: "error",
+    reason: "spotify-failed",
+    message: "Spotify failed. Try again.",
+  };
+}
