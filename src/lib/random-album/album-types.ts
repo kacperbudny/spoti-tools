@@ -20,14 +20,9 @@ export function toggleAlbumType(
   selection: AlbumTypeSelection,
   type: AlbumType,
 ): AlbumTypeSelection {
-  const next = { ...selection, [type]: !selection[type] };
-  const enabledCount = ALBUM_TYPES.filter(
-    (albumType) => next[albumType],
-  ).length;
+  return { ...selection, [type]: !selection[type] };
+}
 
-  if (enabledCount === 0) {
-    return selection;
-  }
-
-  return next;
+export function hasSelectedAlbumType(selection: AlbumTypeSelection): boolean {
+  return ALBUM_TYPES.some((albumType) => selection[albumType]);
 }

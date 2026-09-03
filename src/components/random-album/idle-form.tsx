@@ -8,6 +8,7 @@ import {
   ALBUM_TYPES,
   type AlbumTypeSelection,
   DEFAULT_ALBUM_TYPE_SELECTION,
+  hasSelectedAlbumType,
   toggleAlbumType,
 } from "@/lib/random-album/album-types";
 
@@ -15,9 +16,25 @@ export function RandomAlbumIdleForm() {
   const [selection, setSelection] = useState<AlbumTypeSelection>(
     DEFAULT_ALBUM_TYPE_SELECTION,
   );
+  const [startError, setStartError] = useState<string | null>(null);
 
   function handleToggle(type: (typeof ALBUM_TYPES)[number]) {
-    setSelection((current) => toggleAlbumType(current, type));
+    setSelection((current) => {
+      const next = toggleAlbumType(current, type);
+      if (hasSelectedAlbumType(next)) {
+        setStartError(null);
+      }
+      return next;
+    });
+  }
+
+  function handleStart() {
+    if (!hasSelectedAlbumType(selection)) {
+      setStartError("Select at least one album type.");
+      return;
+    }
+
+    setStartError(null);
   }
 
   return (
@@ -43,7 +60,14 @@ export function RandomAlbumIdleForm() {
           ))}
         </fieldset>
       </div>
-      <Button type="button">Start</Button>
+      {startError ? (
+        <p role="alert" className="text-sm text-destructive">
+          {startError}
+        </p>
+      ) : null}
+      <Button type="button" onClick={handleStart}>
+        Start
+      </Button>
     </section>
   );
 }
