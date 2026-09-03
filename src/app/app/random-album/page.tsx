@@ -1,14 +1,9 @@
 import Link from "next/link";
-import { UserChrome } from "@/components/app/user-chrome";
 import { RandomAlbumIdleForm } from "@/components/random-album/idle-form";
-import { getSession } from "@/lib/auth/session";
 
-export default async function RandomAlbumPage() {
-  const session = await getSession();
-
+export default function RandomAlbumPage() {
   return (
-    <main className="flex flex-1 flex-col items-center gap-8 p-8">
-      <UserChrome displayName={session?.user.name ?? ""} />
+    <>
       <nav className="w-full max-w-lg">
         <Link
           href="/app"
@@ -18,6 +13,6 @@ export default async function RandomAlbumPage() {
         </Link>
       </nav>
       <RandomAlbumIdleForm />
-    </main>
+    </>
   );
 }
