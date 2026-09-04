@@ -3,13 +3,7 @@
 import { HTTPError } from "ky";
 import { http } from "@/lib/http/ky";
 import type { Album } from "@/lib/random-album/album";
-import type { AlbumTypeSelection } from "@/lib/random-album/album-types";
 import type { LibraryStreamEvent } from "@/lib/random-album/library-stream";
-
-export type RandomAlbumLibraryResult = {
-  library: Album[];
-  pick: Album | null;
-};
 
 export class LibraryLoadError extends Error {
   constructor(message: string) {
@@ -26,13 +20,12 @@ export class RandomAlbumSessionDeadError extends Error {
 }
 
 export async function fetchRandomAlbumLibrary(
-  types: AlbumTypeSelection,
   onProgress?: (loaded: number, total: number) => void,
-): Promise<RandomAlbumLibraryResult> {
+): Promise<Album[]> {
   let response: Response;
 
   try {
-    response = await http.post("/api/random-album/library", { json: types });
+    response = await http.post("/api/random-album/library");
   } catch (error) {
     if (error instanceof HTTPError) {
       throw new LibraryLoadError("Could not load the Library. Try again.");
@@ -77,7 +70,7 @@ export async function fetchRandomAlbumLibrary(
           onProgress?.(event.loaded, event.total);
           break;
         case "complete":
-          return { library: event.library, pick: event.pick };
+          return event.library;
         case "error":
           throw new LibraryLoadError(event.message);
         case "session-dead":

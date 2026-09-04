@@ -1,67 +1,47 @@
-import { getSpotifyAccessToken, SessionDeadError } from "@/lib/auth/session";
-import { albumTypeSelectionSchema } from "@/lib/random-album/album-types";
-import {
-  encodeLibraryStreamEvent,
-  toLibraryStreamError,
-} from "@/lib/random-album/library-stream";
-import { pick } from "@/lib/random-album/pick";
-import { loadLibrary } from "@/lib/spotify/load-library";
+import { SessionDeadError } from "@/lib/auth/errors";
+import { getSpotifyAccessToken } from "@/lib/auth/session";
+import { encodeLibraryStreamEvent } from "@/lib/random-album/library-stream";
+import { SpotifyClient, SpotifyUnavailableError } from "@/lib/spotify/client";
+import { loadSpotifyLibrary } from "@/lib/spotify/load-spotify-library";
 
-export async function POST(request: Request) {
-  const body = (await request.json()) as { types?: unknown };
-  const parsedTypes = albumTypeSelectionSchema.safeParse(body.types);
-
-  if (!parsedTypes.success) {
-    return Response.json(
-      {
-        error: parsedTypes.error.issues[0]?.message,
-      },
-      { status: 400 },
-    );
-  }
-
-  const types = parsedTypes.data;
-
-  let accessToken: string;
-
-  try {
-    accessToken = await getSpotifyAccessToken();
-  } catch (error) {
-    if (error instanceof SessionDeadError) {
-      return new Response(
-        Buffer.from(encodeLibraryStreamEvent({ type: "session-dead" })),
-        {
-          headers: { "Content-Type": "application/x-ndjson" },
-        },
-      );
-    }
-
-    throw error;
-  }
-
+export async function POST() {
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const result = await loadLibrary(accessToken, (loaded, total) => {
-        controller.enqueue(
-          encodeLibraryStreamEvent({ type: "progress", loaded, total }),
+      try {
+        const accessToken = await getSpotifyAccessToken();
+        const library = await loadSpotifyLibrary(
+          new SpotifyClient(accessToken),
+          (loaded, total) => {
+            controller.enqueue(
+              encodeLibraryStreamEvent({ type: "progress", loaded, total }),
+            );
+          },
         );
-      });
 
-      if (!result.ok) {
         controller.enqueue(
-          encodeLibraryStreamEvent(toLibraryStreamError(result)),
+          encodeLibraryStreamEvent({
+            type: "complete",
+            library,
+          }),
         );
-        controller.close();
-        return;
+      } catch (error) {
+        if (error instanceof SessionDeadError) {
+          controller.enqueue(
+            encodeLibraryStreamEvent({ type: "session-dead" }),
+          );
+        } else if (error instanceof SpotifyUnavailableError) {
+          controller.enqueue(
+            encodeLibraryStreamEvent({
+              type: "error",
+              reason: "source-unavailable",
+              message: "Spotify failed. Try again.",
+            }),
+          );
+        } else {
+          throw error;
+        }
       }
 
-      controller.enqueue(
-        encodeLibraryStreamEvent({
-          type: "complete",
-          library: result.library,
-          pick: pick(result.library, types),
-        }),
-      );
       controller.close();
     },
   });

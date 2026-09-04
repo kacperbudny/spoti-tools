@@ -33,7 +33,7 @@ export function useRandomAlbumIdleForm() {
 
   const libraryMutation = useMutation({
     mutationFn: (types: AlbumTypeSelection) =>
-      fetchRandomAlbumLibrary(types, (loaded, total) => {
+      fetchRandomAlbumLibrary((loaded, total) => {
         setProgress({ loaded, total });
       }),
     onMutate: () => {
@@ -42,8 +42,9 @@ export function useRandomAlbumIdleForm() {
       setNoPickMessage(null);
       setValidationError(null);
     },
-    onSuccess: ({ library, pick: nextPick }) => {
+    onSuccess: (library, types) => {
       setProgress(null);
+      const nextPick = pick(library, types);
       setCurrentPick(nextPick);
       setNoPickMessage(getNoPickMessage(library, nextPick, "load"));
     },
@@ -56,7 +57,7 @@ export function useRandomAlbumIdleForm() {
     },
   });
 
-  const library = libraryMutation.data?.library ?? null;
+  const library = libraryMutation.data ?? null;
   const libraryError = getLibraryError(libraryMutation.error);
 
   function handleToggle(type: AlbumType) {

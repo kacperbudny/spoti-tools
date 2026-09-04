@@ -2,14 +2,8 @@ import "server-only";
 
 import { headers } from "next/headers";
 import { cache } from "react";
+import { SessionDeadError } from "@/lib/auth/errors";
 import { auth } from "@/lib/auth/server";
-
-export class SessionDeadError extends Error {
-  constructor() {
-    super("Session expired");
-    this.name = "SessionDeadError";
-  }
-}
 
 export const getSession = cache(async () => {
   return auth.api.getSession({

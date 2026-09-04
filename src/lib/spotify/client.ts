@@ -1,11 +1,16 @@
 import { HTTPError } from "ky";
+import { SessionDeadError } from "@/lib/auth/errors";
 import { http } from "@/lib/http/ky";
-import type {
-  SpotifySavedAlbumsPage,
-  SpotifySavedAlbumsResult,
-} from "@/lib/spotify/types";
+import type { SpotifySavedAlbumsPage } from "@/lib/spotify/types";
 
 const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
+
+export class SpotifyUnavailableError extends Error {
+  constructor() {
+    super("Spotify unavailable");
+    this.name = "SpotifyUnavailableError";
+  }
+}
 
 export class SpotifyClient {
   constructor(private readonly accessToken: string) {}
@@ -13,31 +18,29 @@ export class SpotifyClient {
   async getSavedAlbumsPage(
     offset: number,
     limit = 50,
-  ): Promise<SpotifySavedAlbumsResult> {
+  ): Promise<SpotifySavedAlbumsPage> {
     const url = new URL(`${SPOTIFY_API_BASE}/me/albums`);
     url.searchParams.set("limit", String(limit));
     url.searchParams.set("offset", String(offset));
 
     try {
-      const page = await http
+      return await http
         .get(url, {
           headers: {
             Authorization: `Bearer ${this.accessToken}`,
           },
         })
         .json<SpotifySavedAlbumsPage>();
-
-      return { ok: true, page };
     } catch (error) {
       if (error instanceof HTTPError) {
         const status = error.response.status;
 
         if (status === 401 || status === 403) {
-          return { ok: false, error: { kind: "session-dead" } };
+          throw new SessionDeadError();
         }
       }
 
-      return { ok: false, error: { kind: "request-failed" } };
+      throw new SpotifyUnavailableError();
     }
   }
 }

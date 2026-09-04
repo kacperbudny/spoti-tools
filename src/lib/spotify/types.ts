@@ -19,11 +19,3 @@ export type SpotifySavedAlbumsPage = {
   total: number;
   next: string | null;
 };
-
-export type SpotifySavedAlbumsError =
-  | { kind: "session-dead" }
-  | { kind: "request-failed" };
-
-export type SpotifySavedAlbumsResult =
-  | { ok: true; page: SpotifySavedAlbumsPage }
-  | { ok: false; error: SpotifySavedAlbumsError };
