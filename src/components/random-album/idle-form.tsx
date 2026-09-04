@@ -17,7 +17,7 @@ export function RandomAlbumIdleForm() {
     showReshuffle,
     isLoading,
     handleToggle,
-    handleStart,
+    handleLoadLibrary,
     handleReshuffle,
   } = useRandomAlbumIdleForm();
 
@@ -67,7 +67,7 @@ export function RandomAlbumIdleForm() {
           Re-shuffle
         </Button>
       ) : (
-        <Button type="button" onClick={handleStart} disabled={isLoading}>
+        <Button type="button" onClick={handleLoadLibrary} disabled={isLoading}>
           Start
         </Button>
       )}

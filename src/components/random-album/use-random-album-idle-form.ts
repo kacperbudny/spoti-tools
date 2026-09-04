@@ -11,12 +11,12 @@ import {
   hasSelectedAlbumType,
   toggleAlbumType,
 } from "@/lib/random-album/album-types";
-import { pick } from "@/lib/random-album/pick";
 import {
   fetchRandomAlbumLibrary,
+  LibraryLoadError,
   RandomAlbumSessionDeadError,
-  RandomAlbumStartError,
-} from "@/lib/random-album/start-client";
+} from "@/lib/random-album/library-client";
+import { pick } from "@/lib/random-album/pick";
 
 export function useRandomAlbumIdleForm() {
   const router = useRouter();
@@ -31,7 +31,7 @@ export function useRandomAlbumIdleForm() {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [noPickMessage, setNoPickMessage] = useState<string | null>(null);
 
-  const startMutation = useMutation({
+  const libraryMutation = useMutation({
     mutationFn: (types: AlbumTypeSelection) =>
       fetchRandomAlbumLibrary(types, (loaded, total) => {
         setProgress({ loaded, total });
@@ -45,7 +45,7 @@ export function useRandomAlbumIdleForm() {
     onSuccess: ({ library, pick: nextPick }) => {
       setProgress(null);
       setCurrentPick(nextPick);
-      setNoPickMessage(getNoPickMessage(library, nextPick, "start"));
+      setNoPickMessage(getNoPickMessage(library, nextPick, "load"));
     },
     onError: (error) => {
       setProgress(null);
@@ -56,8 +56,8 @@ export function useRandomAlbumIdleForm() {
     },
   });
 
-  const library = startMutation.data?.library ?? null;
-  const startError = getStartError(startMutation.error);
+  const library = libraryMutation.data?.library ?? null;
+  const libraryError = getLibraryError(libraryMutation.error);
 
   function handleToggle(type: AlbumType) {
     setSelection((current) => {
@@ -69,13 +69,13 @@ export function useRandomAlbumIdleForm() {
     });
   }
 
-  function handleStart() {
+  function handleLoadLibrary() {
     if (!hasSelectedAlbumType(selection)) {
       setValidationError("Select at least one album type.");
       return;
     }
 
-    startMutation.mutate(selection);
+    libraryMutation.mutate(selection);
   }
 
   function handleReshuffle() {
@@ -102,11 +102,11 @@ export function useRandomAlbumIdleForm() {
     currentPick,
     progress,
     noPickMessage,
-    errorMessage: validationError ?? startError,
+    errorMessage: validationError ?? libraryError,
     showReshuffle: currentPick !== null,
-    isLoading: startMutation.isPending,
+    isLoading: libraryMutation.isPending,
     handleToggle,
-    handleStart,
+    handleLoadLibrary,
     handleReshuffle,
   };
 }
@@ -114,7 +114,7 @@ export function useRandomAlbumIdleForm() {
 function getNoPickMessage(
   library: Album[],
   nextPick: Album | null,
-  context: "start" | "reshuffle",
+  context: "load" | "reshuffle",
 ): string | null {
   if (library.length === 0) {
     return "The Library has no saved albums.";
@@ -129,8 +129,8 @@ function getNoPickMessage(
   return null;
 }
 
-function getStartError(error: unknown): string | null {
-  if (error instanceof RandomAlbumStartError) {
+function getLibraryError(error: unknown): string | null {
+  if (error instanceof LibraryLoadError) {
     return error.message;
   }
 

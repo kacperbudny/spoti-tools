@@ -4,17 +4,17 @@ import { HTTPError } from "ky";
 import { http } from "@/lib/http/ky";
 import type { Album } from "@/lib/random-album/album";
 import type { AlbumTypeSelection } from "@/lib/random-album/album-types";
-import type { StartStreamEvent } from "@/lib/random-album/start-stream";
+import type { LibraryStreamEvent } from "@/lib/random-album/library-stream";
 
-export type StartRandomAlbumResult = {
+export type RandomAlbumLibraryResult = {
   library: Album[];
   pick: Album | null;
 };
 
-export class RandomAlbumStartError extends Error {
+export class LibraryLoadError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "RandomAlbumStartError";
+    this.name = "LibraryLoadError";
   }
 }
 
@@ -28,16 +28,14 @@ export class RandomAlbumSessionDeadError extends Error {
 export async function fetchRandomAlbumLibrary(
   types: AlbumTypeSelection,
   onProgress?: (loaded: number, total: number) => void,
-): Promise<StartRandomAlbumResult> {
+): Promise<RandomAlbumLibraryResult> {
   let response: Response;
 
   try {
-    response = await http.post("/api/random-album/start", { json: types });
+    response = await http.post("/api/random-album/library", { json: types });
   } catch (error) {
     if (error instanceof HTTPError) {
-      throw new RandomAlbumStartError(
-        "Could not start Random album. Try again.",
-      );
+      throw new LibraryLoadError("Could not load the Library. Try again.");
     }
 
     throw error;
@@ -45,7 +43,7 @@ export async function fetchRandomAlbumLibrary(
 
   const reader = response.body?.getReader();
   if (!reader) {
-    throw new RandomAlbumStartError("Spotify failed. Try again.");
+    throw new LibraryLoadError("Spotify failed. Try again.");
   }
 
   const decoder = new TextDecoder();
@@ -72,7 +70,7 @@ export async function fetchRandomAlbumLibrary(
         continue;
       }
 
-      const event = JSON.parse(line) as StartStreamEvent;
+      const event = JSON.parse(line) as LibraryStreamEvent;
 
       switch (event.type) {
         case "progress":
@@ -81,12 +79,12 @@ export async function fetchRandomAlbumLibrary(
         case "complete":
           return { library: event.library, pick: event.pick };
         case "error":
-          throw new RandomAlbumStartError(event.message);
+          throw new LibraryLoadError(event.message);
         case "session-dead":
           throw new RandomAlbumSessionDeadError();
       }
     }
   }
 
-  throw new RandomAlbumStartError("Spotify failed. Try again.");
+  throw new LibraryLoadError("Spotify failed. Try again.");
 }

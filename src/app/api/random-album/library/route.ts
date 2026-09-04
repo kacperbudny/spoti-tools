@@ -1,10 +1,10 @@
+import { getSpotifyAccessToken, SessionDeadError } from "@/lib/auth/session";
 import { albumTypeSelectionSchema } from "@/lib/random-album/album-types";
-import { pick } from "@/lib/random-album/pick";
 import {
-  encodeStartStreamEvent,
-  toStartError,
-} from "@/lib/random-album/start-stream";
-import { getSpotifyAccessToken } from "@/lib/spotify/access-token";
+  encodeLibraryStreamEvent,
+  toLibraryStreamError,
+} from "@/lib/random-album/library-stream";
+import { pick } from "@/lib/random-album/pick";
 import { loadLibrary } from "@/lib/spotify/load-library";
 
 export async function POST(request: Request) {
@@ -22,36 +22,41 @@ export async function POST(request: Request) {
 
   const types = parsedTypes.data;
 
-  const tokenResult = await getSpotifyAccessToken();
+  let accessToken: string;
 
-  if (!tokenResult.ok) {
-    return new Response(
-      Buffer.from(encodeStartStreamEvent({ type: "session-dead" })),
-      {
-        headers: { "Content-Type": "application/x-ndjson" },
-      },
-    );
+  try {
+    accessToken = await getSpotifyAccessToken();
+  } catch (error) {
+    if (error instanceof SessionDeadError) {
+      return new Response(
+        Buffer.from(encodeLibraryStreamEvent({ type: "session-dead" })),
+        {
+          headers: { "Content-Type": "application/x-ndjson" },
+        },
+      );
+    }
+
+    throw error;
   }
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const result = await loadLibrary(
-        tokenResult.accessToken,
-        (loaded, total) => {
-          controller.enqueue(
-            encodeStartStreamEvent({ type: "progress", loaded, total }),
-          );
-        },
-      );
+      const result = await loadLibrary(accessToken, (loaded, total) => {
+        controller.enqueue(
+          encodeLibraryStreamEvent({ type: "progress", loaded, total }),
+        );
+      });
 
       if (!result.ok) {
-        controller.enqueue(encodeStartStreamEvent(toStartError(result)));
+        controller.enqueue(
+          encodeLibraryStreamEvent(toLibraryStreamError(result)),
+        );
         controller.close();
         return;
       }
 
       controller.enqueue(
-        encodeStartStreamEvent({
+        encodeLibraryStreamEvent({
           type: "complete",
           library: result.library,
           pick: pick(result.library, types),

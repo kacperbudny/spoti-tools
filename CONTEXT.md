@@ -37,19 +37,15 @@ How an Album is filed: album, single, or compilation. album means a full-length 
 _Avoid_: EP, LP (as separate toggle labels; Single/EP is the UI label for single)
 
 **Random album**:
-The Tool at `/app/random-album`. The User Starts it; it does not run by opening the page.
-_Avoid_: Random album selector, picker, collection picker
-
-**Start**:
-The User's act of running Random album. It loads the Library and produces a Pick from the Album types selected at that moment. If there is no Pick, Start stays the action. Opening the Tool is not Start.
-_Avoid_: Run, load, fetch, go
+The Tool at `/app/random-album`. Opening the page does not load the Library or produce a Pick; the User does that from the Tool. The first-time button is labeled Start — that is UI copy, not a domain act.
+_Avoid_: Random album selector, picker, collection picker. Do not name loading the Library or producing a Pick "Start" in code or docs.
 
 **Pick**:
 The Album Random album is showing. Changing Album types does not change the Pick; only Re-shuffle does.
 _Avoid_: Result, selection, roll
 
 **Re-shuffle**:
-Asking Random album for another Pick from the Library already loaded since Start, using the Album types selected now. There is no Re-shuffle when there is no Pick.
+Asking Random album for another Pick from the Library already loaded, using the Album types selected now. There is no Re-shuffle when there is no Pick.
 _Avoid_: Reload, refresh, randomize again
 
 **Session**:

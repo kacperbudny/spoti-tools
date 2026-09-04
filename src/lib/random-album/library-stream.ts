@@ -1,40 +1,42 @@
 import type { Album } from "@/lib/random-album/album";
 
-export type StartProgressEvent = {
+export type LibraryProgressEvent = {
   type: "progress";
   loaded: number;
   total: number;
 };
 
-export type StartCompleteEvent = {
+export type LibraryCompleteEvent = {
   type: "complete";
   library: Album[];
   pick: Album | null;
 };
 
-export type StartErrorEvent = {
+export type LibraryErrorEvent = {
   type: "error";
   reason: "source-unavailable";
   message: string;
 };
 
-export type StartSessionDeadEvent = {
+export type LibrarySessionDeadEvent = {
   type: "session-dead";
 };
 
-export type StartStreamEvent =
-  | StartProgressEvent
-  | StartCompleteEvent
-  | StartErrorEvent
-  | StartSessionDeadEvent;
+export type LibraryStreamEvent =
+  | LibraryProgressEvent
+  | LibraryCompleteEvent
+  | LibraryErrorEvent
+  | LibrarySessionDeadEvent;
 
-export function encodeStartStreamEvent(event: StartStreamEvent): Uint8Array {
+export function encodeLibraryStreamEvent(
+  event: LibraryStreamEvent,
+): Uint8Array {
   return new TextEncoder().encode(`${JSON.stringify(event)}\n`);
 }
 
-export function toStartError(result: {
+export function toLibraryStreamError(result: {
   reason: "session-dead" | "source-unavailable";
-}): StartErrorEvent | StartSessionDeadEvent {
+}): LibraryErrorEvent | LibrarySessionDeadEvent {
   if (result.reason === "session-dead") {
     return { type: "session-dead" };
   }
