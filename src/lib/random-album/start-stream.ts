@@ -15,7 +15,7 @@ export type StartCompleteEvent = {
 
 export type StartErrorEvent = {
   type: "error";
-  reason: "spotify-failed";
+  reason: "source-unavailable";
   message: string;
 };
 
@@ -42,7 +42,7 @@ export function toStartError(
 
   return {
     type: "error",
-    reason: "spotify-failed",
+    reason: "source-unavailable",
     message: "Spotify failed. Try again.",
   };
 }

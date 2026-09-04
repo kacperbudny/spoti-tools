@@ -4,7 +4,6 @@ import type {
   LoadLibraryProgress,
   LoadLibraryResult,
 } from "@/lib/random-album/library-source";
-import { mapSavedAlbum } from "@/lib/random-album/map-album";
 
 export async function loadLibrary(
   pageSource: LibraryPageSource,
@@ -24,17 +23,17 @@ export async function loadLibrary(
     const { page } = pageResult;
     total = page.total;
 
-    for (const item of page.items) {
-      library.push(mapSavedAlbum(item));
+    for (const album of page.albums) {
+      library.push(album);
     }
 
     onProgress(library.length, total);
 
-    if (!page.next) {
+    if (!page.hasMore) {
       break;
     }
 
-    offset += page.items.length;
+    offset += page.albums.length;
   }
 
   return { ok: true, library };

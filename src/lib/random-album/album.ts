@@ -6,6 +6,6 @@ export type Album = {
   artists: string[];
   year: number | null;
   type: AlbumType;
-  coverUrl: string;
+  coverUrl?: string;
   listenUrl: string;
 };

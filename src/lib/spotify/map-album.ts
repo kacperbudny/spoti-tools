@@ -1,5 +1,6 @@
 import type { Album } from "@/lib/random-album/album";
-import type { SpotifySavedAlbumItem } from "@/lib/random-album/library-source";
+import type { AlbumType } from "@/lib/random-album/album-types";
+import type { SpotifySavedAlbumItem } from "@/lib/spotify/types";
 
 export function mapSavedAlbum(item: SpotifySavedAlbumItem): Album {
   const { album } = item;
@@ -9,8 +10,8 @@ export function mapSavedAlbum(item: SpotifySavedAlbumItem): Album {
     title: album.name,
     artists: album.artists.map((artist) => artist.name),
     year: parseReleaseYear(album.release_date),
-    type: album.album_type,
-    coverUrl: album.images[0]?.url ?? "",
+    type: album.album_type satisfies AlbumType,
+    coverUrl: album.images[0]?.url,
     listenUrl: album.external_urls.spotify,
   };
 }

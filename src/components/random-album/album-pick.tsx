@@ -1,4 +1,11 @@
 import { buttonVariants } from "@/components/ui/button";
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import type { Album } from "@/lib/random-album/album";
 import { ALBUM_TYPE_LABELS } from "@/lib/random-album/album-types";
 import { cn } from "@/lib/utils";
@@ -8,35 +15,35 @@ type AlbumPickProps = {
 };
 
 export function AlbumPick({ album }: AlbumPickProps) {
+  const metadata = [album.year, ALBUM_TYPE_LABELS[album.type]]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <article className="flex flex-col gap-4 rounded-2xl border border-border p-4">
+    <Card className="w-full max-w-xs">
       {album.coverUrl ? (
         // biome-ignore lint/performance/noImgElement: Spotify cover URLs are external and dynamic.
         <img
           src={album.coverUrl}
-          alt=""
-          className="aspect-square w-full max-w-xs rounded-xl object-cover"
+          alt={`${album.title} cover art`}
+          className="aspect-square w-full object-cover"
         />
       ) : null}
-      <div className="flex flex-col gap-1">
-        <h2 className="text-xl font-medium">{album.title}</h2>
-        <p className="text-sm text-muted-foreground">
-          {album.artists.join(", ")}
-        </p>
-        <p className="text-sm text-muted-foreground">
-          {[album.year, ALBUM_TYPE_LABELS[album.type]]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
-      </div>
-      <a
-        href={album.listenUrl}
-        target="_blank"
-        rel="noreferrer"
-        className={cn(buttonVariants())}
-      >
-        Listen on Spotify
-      </a>
-    </article>
+      <CardHeader>
+        <CardTitle className="text-xl">{album.title}</CardTitle>
+        <CardDescription>{album.artists.join(", ")}</CardDescription>
+        {metadata ? <CardDescription>{metadata}</CardDescription> : null}
+      </CardHeader>
+      <CardFooter>
+        <a
+          href={album.listenUrl}
+          target="_blank"
+          rel="noreferrer"
+          className={cn(buttonVariants(), "w-full")}
+        >
+          Listen on Spotify
+        </a>
+      </CardFooter>
+    </Card>
   );
 }

@@ -1,28 +1,14 @@
-import type { AlbumType } from "@/lib/random-album/album-types";
+import type { Album } from "@/lib/random-album/album";
 
-export type SpotifySavedAlbumItem = {
-  album: {
-    id: string;
-    name: string;
-    album_type: AlbumType;
-    artists: Array<{ name: string }>;
-    release_date: string;
-    images: Array<{ url: string }>;
-    external_urls: {
-      spotify: string;
-    };
-  };
-};
-
-export type SpotifySavedAlbumsPage = {
-  items: SpotifySavedAlbumItem[];
+export type LibraryPage = {
+  albums: Album[];
   total: number;
-  next: string | null;
+  hasMore: boolean;
 };
 
 export type FetchLibraryPageResult =
-  | { ok: true; page: SpotifySavedAlbumsPage }
-  | { ok: false; reason: "session-dead" | "spotify-failed" };
+  | { ok: true; page: LibraryPage }
+  | { ok: false; reason: "session-dead" | "source-unavailable" };
 
 export type LibraryPageSource = (
   offset: number,
@@ -31,5 +17,5 @@ export type LibraryPageSource = (
 export type LoadLibraryProgress = (loaded: number, total: number) => void;
 
 export type LoadLibraryResult =
-  | { ok: true; library: import("@/lib/random-album/album").Album[] }
-  | { ok: false; reason: "session-dead" | "spotify-failed" };
+  | { ok: true; library: Album[] }
+  | { ok: false; reason: "session-dead" | "source-unavailable" };

@@ -1,3 +1,5 @@
+import * as z from "zod";
+
 export const ALBUM_TYPES = ["album", "single", "compilation"] as const;
 
 export type AlbumType = (typeof ALBUM_TYPES)[number];
@@ -26,3 +28,13 @@ export function toggleAlbumType(
 export function hasSelectedAlbumType(selection: AlbumTypeSelection): boolean {
   return ALBUM_TYPES.some((albumType) => selection[albumType]);
 }
+
+export const albumTypeSelectionSchema = z
+  .object({
+    album: z.boolean(),
+    single: z.boolean(),
+    compilation: z.boolean(),
+  })
+  .refine(hasSelectedAlbumType, {
+    message: "Select at least one album type.",
+  });

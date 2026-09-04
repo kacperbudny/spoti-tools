@@ -1,29 +1,31 @@
 import { describe, expect, test } from "bun:test";
 import type { Album } from "@/lib/random-album/album";
-import type { SpotifySavedAlbumsPage } from "@/lib/random-album/library-source";
-import {
-  type FetchLibraryPageResult,
-  type LibraryPageSource,
-  loadLibrary,
-} from "@/lib/random-album/load-library";
+import type {
+  FetchLibraryPageResult,
+  LibraryPage,
+  LibraryPageSource,
+} from "@/lib/random-album/library-source";
+import { loadLibrary } from "@/lib/random-album/load-library";
 
-function savedAlbum(
-  id: string,
-  overrides: Partial<SpotifySavedAlbumsPage["items"][number]["album"]> = {},
-) {
+function album(id: string, overrides: Partial<Album> = {}): Album {
   return {
-    album: {
-      id,
-      name: `Album ${id}`,
-      album_type: "album" as const,
-      artists: [{ name: "Artist" }],
-      release_date: "2020-05-15",
-      images: [{ url: `https://example.com/${id}.jpg` }],
-      external_urls: {
-        spotify: `https://open.spotify.com/album/${id}`,
-      },
-      ...overrides,
-    },
+    id,
+    title: `Album ${id}`,
+    artists: ["Artist"],
+    year: 2020,
+    type: "album",
+    coverUrl: `https://example.com/${id}.jpg`,
+    listenUrl: `https://open.spotify.com/album/${id}`,
+    ...overrides,
+  };
+}
+
+function libraryPage(overrides: Partial<LibraryPage> = {}): LibraryPage {
+  return {
+    albums: [],
+    total: 0,
+    hasMore: false,
+    ...overrides,
   };
 }
 
@@ -31,7 +33,7 @@ function fakePageSource(
   pages: Record<number, FetchLibraryPageResult>,
 ): LibraryPageSource {
   return async (offset) =>
-    pages[offset] ?? { ok: false, reason: "spotify-failed" };
+    pages[offset] ?? { ok: false, reason: "source-unavailable" };
 }
 
 describe("loadLibrary", () => {
@@ -40,19 +42,18 @@ describe("loadLibrary", () => {
     const pageSource = fakePageSource({
       0: {
         ok: true,
-        page: {
+        page: libraryPage({
           total: 3,
-          next: "next",
-          items: [savedAlbum("1"), savedAlbum("2")],
-        },
+          hasMore: true,
+          albums: [album("1"), album("2")],
+        }),
       },
       2: {
         ok: true,
-        page: {
+        page: libraryPage({
           total: 3,
-          next: null,
-          items: [savedAlbum("3")],
-        },
+          albums: [album("3")],
+        }),
       },
     });
 
@@ -74,55 +75,11 @@ describe("loadLibrary", () => {
     ]);
   });
 
-  test("maps each item to an Album with an HTTPS listen URL", async () => {
+  test("returns an empty library when the source reports zero saved albums", async () => {
     const pageSource = fakePageSource({
       0: {
         ok: true,
-        page: {
-          total: 1,
-          next: null,
-          items: [
-            savedAlbum("abc", {
-              name: "Test Title",
-              album_type: "single",
-              artists: [{ name: "One" }, { name: "Two" }],
-              release_date: "2019",
-              external_urls: {
-                spotify: "https://open.spotify.com/album/abc",
-              },
-            }),
-          ],
-        },
-      },
-    });
-
-    const result = await loadLibrary(pageSource, () => {});
-
-    expect(result.ok).toBe(true);
-    if (!result.ok) {
-      return;
-    }
-
-    expect(result.library[0]).toEqual({
-      id: "abc",
-      title: "Test Title",
-      artists: ["One", "Two"],
-      year: 2019,
-      type: "single",
-      coverUrl: "https://example.com/abc.jpg",
-      listenUrl: "https://open.spotify.com/album/abc",
-    } satisfies Album);
-  });
-
-  test("returns an empty library when Spotify reports zero saved albums", async () => {
-    const pageSource = fakePageSource({
-      0: {
-        ok: true,
-        page: {
-          total: 0,
-          next: null,
-          items: [],
-        },
+        page: libraryPage({ total: 0 }),
       },
     });
 
@@ -131,22 +88,22 @@ describe("loadLibrary", () => {
     expect(result).toEqual({ ok: true, library: [] });
   });
 
-  test("returns spotify-failed when a page fetch fails", async () => {
+  test("returns source-unavailable when a page fetch fails", async () => {
     const pageSource = fakePageSource({
       0: {
         ok: true,
-        page: {
+        page: libraryPage({
           total: 2,
-          next: "next",
-          items: [savedAlbum("1")],
-        },
+          hasMore: true,
+          albums: [album("1")],
+        }),
       },
-      1: { ok: false, reason: "spotify-failed" },
+      1: { ok: false, reason: "source-unavailable" },
     });
 
     const result = await loadLibrary(pageSource, () => {});
 
-    expect(result).toEqual({ ok: false, reason: "spotify-failed" });
+    expect(result).toEqual({ ok: false, reason: "source-unavailable" });
   });
 
   test("returns session-dead when the page source reports it", async () => {

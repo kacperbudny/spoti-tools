@@ -1,35 +1,51 @@
 "use client";
 
+import { HTTPError } from "ky";
+import { http } from "@/lib/http/ky";
 import type { Album } from "@/lib/random-album/album";
 import type { AlbumTypeSelection } from "@/lib/random-album/album-types";
 import type { StartStreamEvent } from "@/lib/random-album/start-stream";
 
-type StartRandomAlbumCallbacks = {
-  onProgress: (loaded: number, total: number) => void;
-  onComplete: (library: Album[], pick: Album | null) => void;
-  onSpotifyError: (message: string) => void;
-  onSessionDead: () => void;
+export type StartRandomAlbumResult = {
+  library: Album[];
+  pick: Album | null;
 };
 
-export async function startRandomAlbum(
-  types: AlbumTypeSelection,
-  callbacks: StartRandomAlbumCallbacks,
-) {
-  const response = await fetch("/api/random-album/start", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ types }),
-  });
+export class RandomAlbumStartError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "RandomAlbumStartError";
+  }
+}
 
-  if (!response.ok) {
-    callbacks.onSpotifyError("Could not start Random album. Try again.");
-    return;
+export class RandomAlbumSessionDeadError extends Error {
+  constructor() {
+    super("Session expired");
+    this.name = "RandomAlbumSessionDeadError";
+  }
+}
+
+export async function fetchRandomAlbumLibrary(
+  types: AlbumTypeSelection,
+  onProgress?: (loaded: number, total: number) => void,
+): Promise<StartRandomAlbumResult> {
+  let response: Response;
+
+  try {
+    response = await http.post("/api/random-album/start", { json: types });
+  } catch (error) {
+    if (error instanceof HTTPError) {
+      throw new RandomAlbumStartError(
+        "Could not start Random album. Try again.",
+      );
+    }
+
+    throw error;
   }
 
   const reader = response.body?.getReader();
   if (!reader) {
-    callbacks.onSpotifyError("Spotify failed. Try again.");
-    return;
+    throw new RandomAlbumStartError("Spotify failed. Try again.");
   }
 
   const decoder = new TextDecoder();
@@ -60,18 +76,17 @@ export async function startRandomAlbum(
 
       switch (event.type) {
         case "progress":
-          callbacks.onProgress(event.loaded, event.total);
+          onProgress?.(event.loaded, event.total);
           break;
         case "complete":
-          callbacks.onComplete(event.library, event.pick);
-          break;
+          return { library: event.library, pick: event.pick };
         case "error":
-          callbacks.onSpotifyError(event.message);
-          break;
+          throw new RandomAlbumStartError(event.message);
         case "session-dead":
-          callbacks.onSessionDead();
-          break;
+          throw new RandomAlbumSessionDeadError();
       }
     }
   }
+
+  throw new RandomAlbumStartError("Spotify failed. Try again.");
 }

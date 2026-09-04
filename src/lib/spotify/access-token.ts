@@ -3,11 +3,11 @@ import "server-only";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth/server";
 
-export type SpotifyTokenResult =
+export type SpotifyAccessTokenResult =
   | { ok: true; accessToken: string }
   | { ok: false; reason: "session-dead" };
 
-export async function getSpotifyAccessToken(): Promise<SpotifyTokenResult> {
+export async function getSpotifyAccessToken(): Promise<SpotifyAccessTokenResult> {
   const requestHeaders = await headers();
   const session = await auth.api.getSession({ headers: requestHeaders });
 

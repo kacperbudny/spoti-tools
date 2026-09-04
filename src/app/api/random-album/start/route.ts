@@ -1,44 +1,27 @@
-import {
-  ALBUM_TYPES,
-  type AlbumTypeSelection,
-} from "@/lib/random-album/album-types";
+import { albumTypeSelectionSchema } from "@/lib/random-album/album-types";
 import { loadLibrary } from "@/lib/random-album/load-library";
 import { pick } from "@/lib/random-album/pick";
-import { createSpotifyPageSource } from "@/lib/random-album/spotify-page-source";
-import { getSpotifyAccessToken } from "@/lib/random-album/spotify-token";
 import {
   encodeStartStreamEvent,
   toStartError,
 } from "@/lib/random-album/start-stream";
-
-function parseAlbumTypeSelection(value: unknown): AlbumTypeSelection | null {
-  if (!value || typeof value !== "object") {
-    return null;
-  }
-
-  const record = value as Record<string, unknown>;
-  const selection = {} as AlbumTypeSelection;
-
-  for (const type of ALBUM_TYPES) {
-    if (typeof record[type] !== "boolean") {
-      return null;
-    }
-    selection[type] = record[type];
-  }
-
-  return selection;
-}
+import { getSpotifyAccessToken } from "@/lib/spotify/access-token";
+import { createSpotifyLibrarySource } from "@/lib/spotify/library-source";
 
 export async function POST(request: Request) {
   const body = (await request.json()) as { types?: unknown };
-  const types = parseAlbumTypeSelection(body.types);
+  const parsedTypes = albumTypeSelectionSchema.safeParse(body.types);
 
-  if (!types || !ALBUM_TYPES.some((albumType) => types[albumType])) {
+  if (!parsedTypes.success) {
     return Response.json(
-      { error: "Select at least one album type." },
+      {
+        error: parsedTypes.error.issues[0]?.message,
+      },
       { status: 400 },
     );
   }
+
+  const types = parsedTypes.data;
 
   const tokenResult = await getSpotifyAccessToken();
 
@@ -53,7 +36,7 @@ export async function POST(request: Request) {
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const pageSource = createSpotifyPageSource(tokenResult.accessToken);
+      const pageSource = createSpotifyLibrarySource(tokenResult.accessToken);
       const result = await loadLibrary(pageSource, (loaded, total) => {
         controller.enqueue(
           encodeStartStreamEvent({ type: "progress", loaded, total }),
