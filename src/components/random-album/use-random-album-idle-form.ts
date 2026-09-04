@@ -3,6 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { SessionDeadError } from "@/lib/auth/errors";
 import type { Album } from "@/lib/random-album/album";
 import {
   type AlbumType,
@@ -12,9 +13,8 @@ import {
   toggleAlbumType,
 } from "@/lib/random-album/album-types";
 import {
-  fetchRandomAlbumLibrary,
+  fetchSpotifyLibrary,
   LibraryLoadError,
-  RandomAlbumSessionDeadError,
 } from "@/lib/random-album/library-client";
 import { pick } from "@/lib/random-album/pick";
 
@@ -28,30 +28,28 @@ export function useRandomAlbumIdleForm() {
     loaded: number;
     total: number;
   } | null>(null);
-  const [validationError, setValidationError] = useState<string | null>(null);
-  const [noPickMessage, setNoPickMessage] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const libraryMutation = useMutation({
-    mutationFn: (types: AlbumTypeSelection) =>
-      fetchRandomAlbumLibrary((loaded, total) => {
+  const libraryMutation = useMutation<Album[], Error, AlbumTypeSelection>({
+    mutationFn: () =>
+      fetchSpotifyLibrary((loaded, total) => {
         setProgress({ loaded, total });
       }),
     onMutate: () => {
       setProgress(null);
       setCurrentPick(null);
-      setNoPickMessage(null);
-      setValidationError(null);
+      setFormError(null);
     },
     onSuccess: (library, types) => {
       setProgress(null);
       const nextPick = pick(library, types);
       setCurrentPick(nextPick);
-      setNoPickMessage(getNoPickMessage(library, nextPick, "load"));
+      setFormError(nextPick ? null : EMPTY_PICK_ERROR);
     },
     onError: (error) => {
       setProgress(null);
 
-      if (error instanceof RandomAlbumSessionDeadError) {
+      if (error instanceof SessionDeadError) {
         router.push("/");
       }
     },
@@ -64,7 +62,7 @@ export function useRandomAlbumIdleForm() {
     setSelection((current) => {
       const next = toggleAlbumType(current, type);
       if (hasSelectedAlbumType(next)) {
-        setValidationError(null);
+        setFormError(null);
       }
       return next;
     });
@@ -72,7 +70,7 @@ export function useRandomAlbumIdleForm() {
 
   function handleLoadLibrary() {
     if (!hasSelectedAlbumType(selection)) {
-      setValidationError("Select at least one album type.");
+      setFormError("Select at least one album type.");
       return;
     }
 
@@ -81,17 +79,16 @@ export function useRandomAlbumIdleForm() {
 
   function handleReshuffle() {
     if (!library || !hasSelectedAlbumType(selection)) {
-      setValidationError("Select at least one album type.");
+      setFormError("Select at least one album type.");
       return;
     }
 
-    setValidationError(null);
-    setNoPickMessage(null);
+    setFormError(null);
 
     const nextPick = pick(library, selection);
 
     if (!nextPick) {
-      setNoPickMessage(getNoPickMessage(library, nextPick, "reshuffle"));
+      setFormError(EMPTY_PICK_ERROR);
       return;
     }
 
@@ -102,8 +99,7 @@ export function useRandomAlbumIdleForm() {
     selection,
     currentPick,
     progress,
-    noPickMessage,
-    errorMessage: validationError ?? libraryError,
+    errorMessage: formError ?? libraryError,
     showReshuffle: currentPick !== null,
     isLoading: libraryMutation.isPending,
     handleToggle,
@@ -112,23 +108,8 @@ export function useRandomAlbumIdleForm() {
   };
 }
 
-function getNoPickMessage(
-  library: Album[],
-  nextPick: Album | null,
-  context: "load" | "reshuffle",
-): string | null {
-  if (library.length === 0) {
-    return "The Library has no saved albums.";
-  }
-
-  if (!nextPick) {
-    return context === "reshuffle"
-      ? "Nothing in the Library matches these types. Turn on another type or Re-shuffle again."
-      : "Nothing in the Library matches these types. Turn on another type or try again.";
-  }
-
-  return null;
-}
+const EMPTY_PICK_ERROR =
+  "Nothing in the Library matches these types. Turn on another type or try again.";
 
 function getLibraryError(error: unknown): string | null {
   if (error instanceof LibraryLoadError) {

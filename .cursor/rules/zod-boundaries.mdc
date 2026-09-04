@@ -1,0 +1,12 @@
+---
+description: Parse system-boundary data with Zod schemas; infer types from those schemas
+alwaysApply: true
+---
+
+# Zod at system boundaries
+
+Parse HTTP JSON, NDJSON, search params, request bodies, and env with Zod. Infer types with `z.infer`. Do not assert types onto serialized data (`as Foo`, `.json<Foo>()`).
+
+On parse failure, throw that boundary's domain error. SQL uses the Drizzle schema; in-process TypeScript does not need Zod.
+
+See `docs/agents/validation.md`.

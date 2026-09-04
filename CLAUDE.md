@@ -27,3 +27,7 @@ Extract non-trivial logic into custom hooks; keep components UI-focused. Main ex
 ### HTTP
 
 Use ky via `@/lib/http/ky` instead of native `fetch`. See `docs/agents/http.md`.
+
+### Zod
+
+Parse HTTP JSON, env, search params, and other system boundaries with Zod. See `docs/agents/validation.md`.

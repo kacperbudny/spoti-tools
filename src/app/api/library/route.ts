@@ -4,7 +4,7 @@ import { encodeLibraryStreamEvent } from "@/lib/random-album/library-stream";
 import { SpotifyClient, SpotifyUnavailableError } from "@/lib/spotify/client";
 import { loadSpotifyLibrary } from "@/lib/spotify/load-spotify-library";
 
-export async function POST() {
+export async function GET() {
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
@@ -47,6 +47,9 @@ export async function POST() {
   });
 
   return new Response(stream, {
-    headers: { "Content-Type": "application/x-ndjson" },
+    headers: {
+      "Content-Type": "application/x-ndjson",
+      "Cache-Control": "private, no-store",
+    },
   });
 }

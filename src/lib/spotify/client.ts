@@ -1,7 +1,10 @@
 import { HTTPError } from "ky";
 import { SessionDeadError } from "@/lib/auth/errors";
 import { http } from "@/lib/http/ky";
-import type { SpotifySavedAlbumsPage } from "@/lib/spotify/types";
+import {
+  type SpotifySavedAlbumsPage,
+  spotifySavedAlbumsPageSchema,
+} from "@/lib/spotify/types";
 
 const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
 
@@ -24,13 +27,15 @@ export class SpotifyClient {
     url.searchParams.set("offset", String(offset));
 
     try {
-      return await http
+      const body: unknown = await http
         .get(url, {
           headers: {
             Authorization: `Bearer ${this.accessToken}`,
           },
         })
-        .json<SpotifySavedAlbumsPage>();
+        .json();
+
+      return spotifySavedAlbumsPageSchema.parse(body);
     } catch (error) {
       if (error instanceof HTTPError) {
         const status = error.response.status;

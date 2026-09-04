@@ -12,7 +12,6 @@ export function RandomAlbumIdleForm() {
     selection,
     currentPick,
     progress,
-    noPickMessage,
     errorMessage,
     showReshuffle,
     isLoading,
@@ -54,10 +53,6 @@ export function RandomAlbumIdleForm() {
         <p role="alert" className="text-sm text-destructive">
           {errorMessage}
         </p>
-      ) : null}
-
-      {noPickMessage ? (
-        <p className="text-sm text-muted-foreground">{noPickMessage}</p>
       ) : null}
 
       {currentPick ? <AlbumPick album={currentPick} /> : null}

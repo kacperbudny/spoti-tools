@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { signInWithSpotify } from "@/lib/auth/actions";
 import { getSession } from "@/lib/auth/session";
@@ -10,7 +11,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
     redirect("/app");
   }
 
-  const { error } = await searchParams;
+  const { error } = landingSearchParamsSchema.parse(await searchParams);
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-4 p-8">
@@ -23,3 +24,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
     </main>
   );
 }
+
+const landingSearchParamsSchema = z.object({
+  error: z.union([z.string(), z.array(z.string())]).optional(),
+});
