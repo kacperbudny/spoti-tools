@@ -1,5 +1,4 @@
 import type { Album } from "@/lib/random-album/album";
-import type { LoadLibraryResult } from "@/lib/random-album/library-source";
 
 export type StartProgressEvent = {
   type: "progress";
@@ -33,9 +32,9 @@ export function encodeStartStreamEvent(event: StartStreamEvent): Uint8Array {
   return new TextEncoder().encode(`${JSON.stringify(event)}\n`);
 }
 
-export function toStartError(
-  result: Extract<LoadLibraryResult, { ok: false }>,
-): StartErrorEvent | StartSessionDeadEvent {
+export function toStartError(result: {
+  reason: "session-dead" | "source-unavailable";
+}): StartErrorEvent | StartSessionDeadEvent {
   if (result.reason === "session-dead") {
     return { type: "session-dead" };
   }

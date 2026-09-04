@@ -14,7 +14,7 @@ Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-
 
 Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
 
-Hexagonal boundaries: domain ports vs external adapters. See `docs/agents/architecture.md`.
+External APIs: keep vendor HTTP in `src/lib/<vendor>/`. Prefer simplicity. See `docs/agents/architecture.md`.
 
 ### UI components
 

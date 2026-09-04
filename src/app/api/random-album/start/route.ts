@@ -1,12 +1,11 @@
 import { albumTypeSelectionSchema } from "@/lib/random-album/album-types";
-import { loadLibrary } from "@/lib/random-album/load-library";
 import { pick } from "@/lib/random-album/pick";
 import {
   encodeStartStreamEvent,
   toStartError,
 } from "@/lib/random-album/start-stream";
 import { getSpotifyAccessToken } from "@/lib/spotify/access-token";
-import { createSpotifyLibrarySource } from "@/lib/spotify/library-source";
+import { loadLibrary } from "@/lib/spotify/load-library";
 
 export async function POST(request: Request) {
   const body = (await request.json()) as { types?: unknown };
@@ -36,12 +35,14 @@ export async function POST(request: Request) {
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const pageSource = createSpotifyLibrarySource(tokenResult.accessToken);
-      const result = await loadLibrary(pageSource, (loaded, total) => {
-        controller.enqueue(
-          encodeStartStreamEvent({ type: "progress", loaded, total }),
-        );
-      });
+      const result = await loadLibrary(
+        tokenResult.accessToken,
+        (loaded, total) => {
+          controller.enqueue(
+            encodeStartStreamEvent({ type: "progress", loaded, total }),
+          );
+        },
+      );
 
       if (!result.ok) {
         controller.enqueue(encodeStartStreamEvent(toStartError(result)));
