@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { Album } from "@/lib/random-album/album";
 import { DEFAULT_ALBUM_TYPE_SELECTION } from "@/lib/random-album/album-types";
-import { pickRandomAlbum } from "@/lib/random-album/pick";
+import { pickRandomAlbum } from "@/lib/random-album/pick-random-album";
 
 const library: Album[] = [
   {
