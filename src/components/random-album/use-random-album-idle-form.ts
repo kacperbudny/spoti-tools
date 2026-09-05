@@ -31,7 +31,7 @@ export function useRandomAlbumIdleForm() {
   const [formError, setFormError] = useState<string | null>(null);
 
   const libraryMutation = useMutation<Album[], Error, AlbumTypeSelection>({
-    mutationFn: (types) =>
+    mutationFn: () =>
       fetchSpotifyLibrary((loaded, total) => {
         setProgress({ loaded, total });
       }),
