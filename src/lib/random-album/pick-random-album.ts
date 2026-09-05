@@ -1,7 +1,7 @@
 import type { Album } from "@/lib/random-album/album";
 import type { AlbumTypeSelection } from "@/lib/random-album/album-types";
 
-export function pick(
+export function pickRandomAlbum(
   library: Album[],
   types: AlbumTypeSelection,
 ): Album | null {

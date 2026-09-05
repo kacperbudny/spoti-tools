@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { Album } from "@/lib/random-album/album";
 import { DEFAULT_ALBUM_TYPE_SELECTION } from "@/lib/random-album/album-types";
-import { pick } from "@/lib/random-album/pick";
+import { pickRandomAlbum } from "@/lib/random-album/pick";
 
 const library: Album[] = [
   {
@@ -33,26 +33,26 @@ const library: Album[] = [
   },
 ];
 
-describe("pick", () => {
+describe("pickRandomAlbum", () => {
   test("returns the only matching album when the filtered set has one", () => {
     expect(
-      pick(library, { album: false, single: false, compilation: true }),
+      pickRandomAlbum(library, { album: false, single: false, compilation: true }),
     ).toEqual(library[2]);
   });
 
   test("returns an album from the filtered set when several match", () => {
-    const result = pick(library, DEFAULT_ALBUM_TYPE_SELECTION);
+    const result = pickRandomAlbum(library, DEFAULT_ALBUM_TYPE_SELECTION);
     expect(result).not.toBeNull();
     expect(["1", "2"]).toContain(result?.id);
   });
 
   test("returns null when no albums match the selected types", () => {
     expect(
-      pick(library, { album: false, single: false, compilation: false }),
+      pickRandomAlbum(library, { album: false, single: false, compilation: false }),
     ).toBeNull();
   });
 
   test("returns null for an empty library", () => {
-    expect(pick([], DEFAULT_ALBUM_TYPE_SELECTION)).toBeNull();
+    expect(pickRandomAlbum([], DEFAULT_ALBUM_TYPE_SELECTION)).toBeNull();
   });
 });

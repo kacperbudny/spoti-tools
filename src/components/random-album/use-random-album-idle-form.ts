@@ -16,7 +16,7 @@ import {
   fetchSpotifyLibrary,
   LibraryLoadError,
 } from "@/lib/random-album/library-client";
-import { pick } from "@/lib/random-album/pick";
+import { pickRandomAlbum } from "@/lib/random-album/pick-random-album";
 
 export function useRandomAlbumIdleForm() {
   const router = useRouter();
@@ -31,7 +31,7 @@ export function useRandomAlbumIdleForm() {
   const [formError, setFormError] = useState<string | null>(null);
 
   const libraryMutation = useMutation<Album[], Error, AlbumTypeSelection>({
-    mutationFn: () =>
+    mutationFn: (types) =>
       fetchSpotifyLibrary((loaded, total) => {
         setProgress({ loaded, total });
       }),
@@ -42,7 +42,7 @@ export function useRandomAlbumIdleForm() {
     },
     onSuccess: (library, types) => {
       setProgress(null);
-      const nextPick = pick(library, types);
+      const nextPick = pickRandomAlbum(library, types);
       setCurrentPick(nextPick);
       setFormError(nextPick ? null : EMPTY_PICK_ERROR);
     },
@@ -51,7 +51,10 @@ export function useRandomAlbumIdleForm() {
 
       if (error instanceof SessionDeadError) {
         router.push("/");
+        return;
       }
+
+      setFormError(getLibraryError(error));
     },
   });
 
@@ -85,9 +88,10 @@ export function useRandomAlbumIdleForm() {
 
     setFormError(null);
 
-    const nextPick = pick(library, selection);
+    const nextPick = pickRandomAlbum(library, selection);
 
     if (!nextPick) {
+      setCurrentPick(null);
       setFormError(EMPTY_PICK_ERROR);
       return;
     }
