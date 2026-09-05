@@ -36,7 +36,11 @@ const library: Album[] = [
 describe("pickRandomAlbum", () => {
   test("returns the only matching album when the filtered set has one", () => {
     expect(
-      pickRandomAlbum(library, { album: false, single: false, compilation: true }),
+      pickRandomAlbum(library, {
+        album: false,
+        single: false,
+        compilation: true,
+      }),
     ).toEqual(library[2]);
   });
 
@@ -48,7 +52,11 @@ describe("pickRandomAlbum", () => {
 
   test("returns null when no albums match the selected types", () => {
     expect(
-      pickRandomAlbum(library, { album: false, single: false, compilation: false }),
+      pickRandomAlbum(library, {
+        album: false,
+        single: false,
+        compilation: false,
+      }),
     ).toBeNull();
   });
 
