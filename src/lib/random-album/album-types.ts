@@ -1,6 +1,10 @@
+import * as z from "zod";
+
 export const ALBUM_TYPES = ["album", "single", "compilation"] as const;
 
-export type AlbumType = (typeof ALBUM_TYPES)[number];
+export const albumTypeSchema = z.enum(ALBUM_TYPES);
+
+export type AlbumType = z.infer<typeof albumTypeSchema>;
 
 export const ALBUM_TYPE_LABELS: Record<AlbumType, string> = {
   album: "Album",
