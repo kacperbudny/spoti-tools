@@ -4,7 +4,7 @@ Toolbox for Spotify, with things I find useful.
 
 ## Features
 
-- [ ] Selecting random album from your collection
+- [x] Selecting random album from your collection
 - [ ] Selecting random song from your collection
 - [ ] Ranking albums from your collection
 - [ ] Saving all of artist's songs on a dedicated playlist
@@ -54,3 +54,4 @@ bun dev
 - **Database**: Neon + Drizzle
 - **Validation**: zod
 - **Auth**: BetterAuth + Spotify
+- **Data fetching**: Tanstack Query + ky
