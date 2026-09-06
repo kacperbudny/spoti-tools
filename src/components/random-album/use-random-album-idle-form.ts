@@ -37,6 +37,7 @@ export function useRandomAlbumIdleForm() {
       }),
     onMutate: () => {
       setProgress(null);
+      setCurrentPick(null);
       setFormError(null);
     },
     onSuccess: (loadedLibrary, types) => {
@@ -88,7 +89,7 @@ export function useRandomAlbumIdleForm() {
     });
   }
 
-  function handleLoadLibrary() {
+  function handleDraw() {
     if (!hasSelectedAlbumType(selection)) {
       setFormError("Select at least one album type.");
       return;
@@ -102,21 +103,6 @@ export function useRandomAlbumIdleForm() {
     libraryMutation.mutate(selection);
   }
 
-  function handleReshuffle() {
-    if (!hasSelectedAlbumType(selection)) {
-      setFormError("Select at least one album type.");
-      return;
-    }
-
-    if (!library || library.length === 0) {
-      setCurrentPick(null);
-      setFormError(EMPTY_LIBRARY_MESSAGE);
-      return;
-    }
-
-    applyPick(library, selection);
-  }
-
   return {
     selection,
     currentPick,
@@ -125,8 +111,8 @@ export function useRandomAlbumIdleForm() {
     showReshuffle: currentPick !== null,
     isLoading: libraryMutation.isPending,
     handleToggle,
-    handleLoadLibrary,
-    handleReshuffle,
+    handleLoadLibrary: handleDraw,
+    handleReshuffle: handleDraw,
   };
 }
 
