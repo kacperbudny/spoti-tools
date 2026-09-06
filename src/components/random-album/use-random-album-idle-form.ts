@@ -40,11 +40,16 @@ export function useRandomAlbumIdleForm() {
       setCurrentPick(null);
       setFormError(null);
     },
-    onSuccess: (library, types) => {
+    onSuccess: (loadedLibrary, types) => {
       setProgress(null);
-      const nextPick = pickRandomAlbum(library, types);
-      setCurrentPick(nextPick);
-      setFormError(nextPick ? null : EMPTY_PICK_ERROR);
+
+      if (loadedLibrary.length === 0) {
+        setCurrentPick(null);
+        setFormError(EMPTY_LIBRARY_MESSAGE);
+        return;
+      }
+
+      applyPick(loadedLibrary, types);
     },
     onError: (error) => {
       setProgress(null);
@@ -61,6 +66,19 @@ export function useRandomAlbumIdleForm() {
   const library = libraryMutation.data ?? null;
   const libraryError = getLibraryError(libraryMutation.error);
 
+  function applyPick(source: Album[], types: AlbumTypeSelection) {
+    const nextPick = pickRandomAlbum(source, types);
+
+    if (!nextPick) {
+      setCurrentPick(null);
+      setFormError(NO_MATCHING_TYPES_MESSAGE);
+      return;
+    }
+
+    setCurrentPick(nextPick);
+    setFormError(null);
+  }
+
   function handleToggle(type: AlbumType) {
     setSelection((current) => {
       const next = toggleAlbumType(current, type);
@@ -71,32 +89,18 @@ export function useRandomAlbumIdleForm() {
     });
   }
 
-  function handleLoadLibrary() {
+  function handleDraw() {
     if (!hasSelectedAlbumType(selection)) {
       setFormError("Select at least one album type.");
       return;
     }
 
+    if (library && library.length > 0) {
+      applyPick(library, selection);
+      return;
+    }
+
     libraryMutation.mutate(selection);
-  }
-
-  function handleReshuffle() {
-    if (!library || !hasSelectedAlbumType(selection)) {
-      setFormError("Select at least one album type.");
-      return;
-    }
-
-    setFormError(null);
-
-    const nextPick = pickRandomAlbum(library, selection);
-
-    if (!nextPick) {
-      setCurrentPick(null);
-      setFormError(EMPTY_PICK_ERROR);
-      return;
-    }
-
-    setCurrentPick(nextPick);
   }
 
   return {
@@ -107,12 +111,14 @@ export function useRandomAlbumIdleForm() {
     showReshuffle: currentPick !== null,
     isLoading: libraryMutation.isPending,
     handleToggle,
-    handleLoadLibrary,
-    handleReshuffle,
+    handleDraw,
   };
 }
 
-const EMPTY_PICK_ERROR =
+const EMPTY_LIBRARY_MESSAGE =
+  "The Library has no saved albums. Save some on Spotify and try again.";
+
+const NO_MATCHING_TYPES_MESSAGE =
   "Nothing in the Library matches these types. Turn on another type or try again.";
 
 function getLibraryError(error: unknown): string | null {

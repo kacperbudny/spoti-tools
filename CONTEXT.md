@@ -37,7 +37,7 @@ How an Album is filed: album, single, or compilation. album means a full-length 
 _Avoid_: EP, LP (as separate toggle labels; Single/EP is the UI label for single)
 
 **Random album**:
-The Tool at `/app/random-album`. Opening the page does not load the Library or produce a Pick; the User does that from the Tool. The first-time button is labeled Start — that is UI copy, not a domain act.
+The Tool at `/app/random-album`. Opening the page does not load the Library or produce a Pick; the User does that from the Tool. The first-time button is labeled Start — that is UI copy, not a domain act. An empty Library crawls Spotify again on the next attempt (the User may have saved albums). If the Library is loaded and nothing matches the selected types, the next draw uses that Library; it does not crawl again.
 _Avoid_: Random album selector, picker, collection picker. Do not name loading the Library or producing a Pick "Start" in code or docs.
 
 **Pick**:

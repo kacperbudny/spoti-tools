@@ -17,7 +17,7 @@ export type AlbumTypeSelection = Record<AlbumType, boolean>;
 export const DEFAULT_ALBUM_TYPE_SELECTION: AlbumTypeSelection = {
   album: true,
   single: true,
-  compilation: false,
+  compilation: true,
 };
 
 export function toggleAlbumType(
