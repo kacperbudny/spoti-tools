@@ -12,7 +12,7 @@ describe("toggleAlbumType", () => {
     ).toEqual({
       album: true,
       single: true,
-      compilation: true,
+      compilation: false,
     });
   });
 
