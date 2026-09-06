@@ -1,41 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import {
+  clearDeferredInstallPrompt,
+  getDeferredInstallPrompt,
+  getServerDeferredInstallPrompt,
+  subscribeDeferredInstallPrompt,
+} from "@/lib/install/deferred-install-prompt";
 import { resolveInstallAction } from "@/lib/install/install-action";
 
 export function useInstallAffordance() {
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIos, setIsIos] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] =
-    useState<BeforeInstallPromptEvent | null>(null);
   const [isIosInstructionsOpen, setIsIosInstructionsOpen] = useState(false);
+  const deferredPrompt = useSyncExternalStore(
+    subscribeDeferredInstallPrompt,
+    getDeferredInstallPrompt,
+    getServerDeferredInstallPrompt,
+  );
 
   useEffect(() => {
     setIsInstalled(readIsInstalled());
     setIsIos(readIsIos());
     setIsDismissed(readIsDismissed());
 
-    function handleBeforeInstallPrompt(event: Event) {
-      event.preventDefault();
-      if (isBeforeInstallPromptEvent(event)) {
-        setDeferredPrompt(event);
-      }
-    }
-
     function handleAppInstalled() {
       setIsInstalled(true);
-      setDeferredPrompt(null);
+      clearDeferredInstallPrompt();
     }
 
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     window.addEventListener("appinstalled", handleAppInstalled);
-
     return () => {
-      window.removeEventListener(
-        "beforeinstallprompt",
-        handleBeforeInstallPrompt,
-      );
       window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);
@@ -56,8 +52,7 @@ export function useInstallAffordance() {
     if (action === "native-prompt" && deferredPrompt) {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      // A deferred prompt can only be replayed once.
-      setDeferredPrompt(null);
+      clearDeferredInstallPrompt();
       if (outcome === "accepted") {
         setIsInstalled(true);
       }
@@ -69,25 +64,17 @@ export function useInstallAffordance() {
     setIsDismissed(true);
   }
 
+  function handleIosInstructionsOpenChange(open: boolean) {
+    setIsIosInstructionsOpen(open);
+  }
+
   return {
     action,
     isIosInstructionsOpen,
-    setIsIosInstructionsOpen,
     handleInstall,
     handleDismiss,
+    handleIosInstructionsOpenChange,
   };
-}
-
-/** Chromium-only, not in lib.dom. */
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-};
-
-function isBeforeInstallPromptEvent(
-  event: Event,
-): event is BeforeInstallPromptEvent {
-  return "prompt" in event && typeof event.prompt === "function";
 }
 
 const DISMISSED_STORAGE_KEY = "spotitools.install.dismissed:v1";

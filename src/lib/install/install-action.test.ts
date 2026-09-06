@@ -1,8 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-  resolveInstallAction,
-  shouldShowInstall,
-} from "@/lib/install/install-action";
+import { resolveInstallAction } from "@/lib/install/install-action";
 
 const NOTHING_APPLIES = {
   isInstalled: false,
@@ -60,21 +57,5 @@ describe("resolveInstallAction", () => {
         isIos: true,
       }),
     ).toBe("hidden");
-  });
-});
-
-describe("shouldShowInstall", () => {
-  test("is true whenever an Install action applies", () => {
-    expect(
-      shouldShowInstall({ ...NOTHING_APPLIES, hasDeferredPrompt: true }),
-    ).toBe(true);
-    expect(shouldShowInstall({ ...NOTHING_APPLIES, isIos: true })).toBe(true);
-  });
-
-  test("is false when Install is hidden", () => {
-    expect(shouldShowInstall(NOTHING_APPLIES)).toBe(false);
-    expect(shouldShowInstall({ ...NOTHING_APPLIES, isInstalled: true })).toBe(
-      false,
-    );
   });
 });

@@ -26,7 +26,3 @@ export function resolveInstallAction(signals: InstallSignals): InstallAction {
 
   return "hidden";
 }
-
-export function shouldShowInstall(signals: InstallSignals): boolean {
-  return resolveInstallAction(signals) !== "hidden";
-}

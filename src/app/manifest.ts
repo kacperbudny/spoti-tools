@@ -1,8 +1,5 @@
 import type { MetadataRoute } from "next";
-
-// Mirrors --background in globals.css (oklch(1 0 0)); keep in sync with the
-// viewport themeColor in layout.tsx.
-const BACKGROUND_COLOR = "#ffffff";
+import { BACKGROUND_COLOR } from "@/lib/theme";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {

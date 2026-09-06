@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "@/app/globals.css";
+import { InstallPromptCapture } from "@/components/app/install-prompt-capture";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { BACKGROUND_COLOR } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -27,8 +29,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // Mirrors --background in globals.css and theme_color in manifest.ts.
-  themeColor: "#ffffff",
+  themeColor: BACKGROUND_COLOR,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       )}
     >
       <body className="min-h-full flex flex-col">
+        <InstallPromptCapture />
         <QueryProvider>{children}</QueryProvider>
       </body>
     </html>

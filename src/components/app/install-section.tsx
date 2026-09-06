@@ -17,9 +17,9 @@ export function InstallSection() {
   const {
     action,
     isIosInstructionsOpen,
-    setIsIosInstructionsOpen,
     handleInstall,
     handleDismiss,
+    handleIosInstructionsOpenChange,
   } = useInstallAffordance();
 
   if (action === "hidden") {
@@ -51,7 +51,7 @@ export function InstallSection() {
       {action === "ios-instructions" ? (
         <IosInstructionsDialog
           open={isIosInstructionsOpen}
-          onOpenChange={setIsIosInstructionsOpen}
+          onOpenChange={handleIosInstructionsOpenChange}
         />
       ) : null}
     </section>
@@ -73,14 +73,14 @@ function IosInstructionsDialog({
         <DialogHeader>
           <DialogTitle>Add to Home Screen</DialogTitle>
           <DialogDescription>
-            iOS has no install button, so Safari does it in three taps.
+            iOS has no install button, so it takes three taps in the browser.
           </DialogDescription>
         </DialogHeader>
         <ol className="list-decimal space-y-2 pl-5">
           <li>
             Tap Share{" "}
             <Share aria-hidden className="inline size-4 align-text-bottom" /> in
-            the Safari toolbar.
+            the browser toolbar.
           </li>
           <li>Scroll down and tap Add to Home Screen.</li>
           <li>Tap Add.</li>
