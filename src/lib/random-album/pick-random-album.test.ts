@@ -50,7 +50,18 @@ describe("pickRandomAlbum", () => {
     expect(["1", "2"]).toContain(result?.id);
   });
 
-  test("returns null when no albums match the selected types", () => {
+  test("re-shuffle membership: drawing repeatedly from the in-memory library returns members of the matching subset", () => {
+    const types = { album: true, single: true, compilation: false };
+    const matchingIds = ["1", "2"];
+
+    for (let i = 0; i < 20; i++) {
+      const pick = pickRandomAlbum(library, types);
+      expect(pick).not.toBeNull();
+      expect(matchingIds).toContain(pick?.id);
+    }
+  });
+
+  test("returns null (no Pick) when no albums match the selected types", () => {
     expect(
       pickRandomAlbum(library, {
         album: false,
@@ -60,7 +71,37 @@ describe("pickRandomAlbum", () => {
     ).toBeNull();
   });
 
-  test("returns null for an empty library", () => {
+  test("returns null (no Pick) when library has albums but none match the selected types", () => {
+    const albumsAndSinglesOnly: Album[] = [library[0], library[1]];
+    const pick = pickRandomAlbum(albumsAndSinglesOnly, {
+      album: false,
+      single: false,
+      compilation: true,
+    });
+    expect(pick).toBeNull();
+  });
+
+  test("returns null (no Pick) for an empty library", () => {
     expect(pickRandomAlbum([], DEFAULT_ALBUM_TYPE_SELECTION)).toBeNull();
+  });
+
+  test("applies type filters only at pick time, drawing from the types passed on that draw", () => {
+    const albumsOnly = {
+      album: true,
+      single: false,
+      compilation: false,
+    };
+    const singlesOnly = {
+      album: false,
+      single: true,
+      compilation: false,
+    };
+
+    const firstDraw = pickRandomAlbum(library, albumsOnly);
+    expect(firstDraw?.type).toBe("album");
+
+    // A subsequent draw (Re-shuffle) on the same library applies the types selected for that draw
+    const secondDraw = pickRandomAlbum(library, singlesOnly);
+    expect(secondDraw?.type).toBe("single");
   });
 });

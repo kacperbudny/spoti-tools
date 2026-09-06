@@ -24,11 +24,19 @@ export function useRandomAlbumIdleForm() {
     DEFAULT_ALBUM_TYPE_SELECTION,
   );
   const [currentPick, setCurrentPick] = useState<Album | null>(null);
+  const [library, setLibrary] = useState<Album[] | null>(null);
   const [progress, setProgress] = useState<{
     loaded: number;
     total: number;
   } | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+
+  function resetToNoPick(message: string) {
+    setCurrentPick(null);
+    setLibrary(null);
+    libraryMutation.reset();
+    setFormError(message);
+  }
 
   const libraryMutation = useMutation<Album[], Error, AlbumTypeSelection>({
     mutationFn: () =>
@@ -38,16 +46,32 @@ export function useRandomAlbumIdleForm() {
     onMutate: () => {
       setProgress(null);
       setCurrentPick(null);
+      setLibrary(null);
       setFormError(null);
     },
-    onSuccess: (library, types) => {
+    onSuccess: (loadedLibrary, types) => {
       setProgress(null);
-      const nextPick = pickRandomAlbum(library, types);
+
+      if (loadedLibrary.length === 0) {
+        resetToNoPick(EMPTY_LIBRARY_MESSAGE);
+        return;
+      }
+
+      const nextPick = pickRandomAlbum(loadedLibrary, types);
+
+      if (!nextPick) {
+        resetToNoPick(NO_MATCHING_TYPES_MESSAGE);
+        return;
+      }
+
+      setLibrary(loadedLibrary);
       setCurrentPick(nextPick);
-      setFormError(nextPick ? null : EMPTY_PICK_ERROR);
+      setFormError(null);
     },
     onError: (error) => {
       setProgress(null);
+      setCurrentPick(null);
+      setLibrary(null);
 
       if (error instanceof SessionDeadError) {
         router.push("/");
@@ -58,7 +82,6 @@ export function useRandomAlbumIdleForm() {
     },
   });
 
-  const library = libraryMutation.data ?? null;
   const libraryError = getLibraryError(libraryMutation.error);
 
   function handleToggle(type: AlbumType) {
@@ -91,8 +114,7 @@ export function useRandomAlbumIdleForm() {
     const nextPick = pickRandomAlbum(library, selection);
 
     if (!nextPick) {
-      setCurrentPick(null);
-      setFormError(EMPTY_PICK_ERROR);
+      resetToNoPick(NO_MATCHING_TYPES_MESSAGE);
       return;
     }
 
@@ -112,7 +134,10 @@ export function useRandomAlbumIdleForm() {
   };
 }
 
-const EMPTY_PICK_ERROR =
+const EMPTY_LIBRARY_MESSAGE =
+  "The Library has no saved albums. Save some on Spotify and try again.";
+
+const NO_MATCHING_TYPES_MESSAGE =
   "Nothing in the Library matches these types. Turn on another type or try again.";
 
 function getLibraryError(error: unknown): string | null {
