@@ -103,8 +103,12 @@ export function useRandomAlbumIdleForm() {
   }
 
   function handleReshuffle() {
-    if (!library || !hasSelectedAlbumType(selection)) {
+    if (!hasSelectedAlbumType(selection)) {
       setFormError("Select at least one album type.");
+      return;
+    }
+
+    if (!library) {
       return;
     }
 
