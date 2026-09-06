@@ -111,8 +111,7 @@ export function useRandomAlbumIdleForm() {
     showReshuffle: currentPick !== null,
     isLoading: libraryMutation.isPending,
     handleToggle,
-    handleLoadLibrary: handleDraw,
-    handleReshuffle: handleDraw,
+    handleDraw,
   };
 }
 
