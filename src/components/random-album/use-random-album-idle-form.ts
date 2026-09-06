@@ -34,7 +34,6 @@ export function useRandomAlbumIdleForm() {
   function resetToNoPick(message: string) {
     setCurrentPick(null);
     setLibrary(null);
-    libraryMutation.reset();
     setFormError(message);
   }
 
