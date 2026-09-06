@@ -24,18 +24,11 @@ export function useRandomAlbumIdleForm() {
     DEFAULT_ALBUM_TYPE_SELECTION,
   );
   const [currentPick, setCurrentPick] = useState<Album | null>(null);
-  const [library, setLibrary] = useState<Album[] | null>(null);
   const [progress, setProgress] = useState<{
     loaded: number;
     total: number;
   } | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-
-  function resetToNoPick(message: string) {
-    setCurrentPick(null);
-    setLibrary(null);
-    setFormError(message);
-  }
 
   const libraryMutation = useMutation<Album[], Error, AlbumTypeSelection>({
     mutationFn: () =>
@@ -44,33 +37,21 @@ export function useRandomAlbumIdleForm() {
       }),
     onMutate: () => {
       setProgress(null);
-      setCurrentPick(null);
-      setLibrary(null);
       setFormError(null);
     },
     onSuccess: (loadedLibrary, types) => {
       setProgress(null);
 
       if (loadedLibrary.length === 0) {
-        resetToNoPick(EMPTY_LIBRARY_MESSAGE);
+        setCurrentPick(null);
+        setFormError(EMPTY_LIBRARY_MESSAGE);
         return;
       }
 
-      const nextPick = pickRandomAlbum(loadedLibrary, types);
-
-      if (!nextPick) {
-        resetToNoPick(NO_MATCHING_TYPES_MESSAGE);
-        return;
-      }
-
-      setLibrary(loadedLibrary);
-      setCurrentPick(nextPick);
-      setFormError(null);
+      applyPick(loadedLibrary, types);
     },
     onError: (error) => {
       setProgress(null);
-      setCurrentPick(null);
-      setLibrary(null);
 
       if (error instanceof SessionDeadError) {
         router.push("/");
@@ -81,7 +62,21 @@ export function useRandomAlbumIdleForm() {
     },
   });
 
+  const library = libraryMutation.data ?? null;
   const libraryError = getLibraryError(libraryMutation.error);
+
+  function applyPick(source: Album[], types: AlbumTypeSelection) {
+    const nextPick = pickRandomAlbum(source, types);
+
+    if (!nextPick) {
+      setCurrentPick(null);
+      setFormError(NO_MATCHING_TYPES_MESSAGE);
+      return;
+    }
+
+    setCurrentPick(nextPick);
+    setFormError(null);
+  }
 
   function handleToggle(type: AlbumType) {
     setSelection((current) => {
@@ -99,6 +94,11 @@ export function useRandomAlbumIdleForm() {
       return;
     }
 
+    if (library && library.length > 0) {
+      applyPick(library, selection);
+      return;
+    }
+
     libraryMutation.mutate(selection);
   }
 
@@ -108,20 +108,13 @@ export function useRandomAlbumIdleForm() {
       return;
     }
 
-    if (!library) {
+    if (!library || library.length === 0) {
+      setCurrentPick(null);
+      setFormError(EMPTY_LIBRARY_MESSAGE);
       return;
     }
 
-    setFormError(null);
-
-    const nextPick = pickRandomAlbum(library, selection);
-
-    if (!nextPick) {
-      resetToNoPick(NO_MATCHING_TYPES_MESSAGE);
-      return;
-    }
-
-    setCurrentPick(nextPick);
+    applyPick(library, selection);
   }
 
   return {
