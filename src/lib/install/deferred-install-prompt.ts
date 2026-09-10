@@ -3,7 +3,7 @@
  * a User action. Chromium fires it once per page load, possibly on a page
  * without the Install affordance or before React hydrates, so the capture
  * runs at module scope in an always-loaded client module (see
- * `InstallPromptCapture` in the root layout).
+ * `Providers` in the root layout).
  */
 
 /** Chromium-only, not in lib.dom. */

@@ -36,7 +36,7 @@ export function InstallSection() {
       </h2>
       <Card size="sm">
         <CardContent>
-          <p>Add SpotiTools to your home screen to open it like an app.</p>
+          <p>Add SpotiTools to your home screen to use it as an app.</p>
         </CardContent>
         <CardFooter className="gap-2">
           <Button type="button" onClick={handleInstall}>
