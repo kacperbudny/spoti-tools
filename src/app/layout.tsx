@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "@/app/globals.css";
-import { QueryProvider } from "@/components/providers/query-provider";
+import { Providers } from "@/app/providers";
+import { THEME_COLOR } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -19,6 +20,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SpotiTools",
   description: "Spotify toolbox",
+  appleWebApp: {
+    capable: true,
+    title: "SpotiTools",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: THEME_COLOR,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -35,7 +45,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       )}
     >
       <body className="min-h-full flex flex-col">
-        <QueryProvider>{children}</QueryProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

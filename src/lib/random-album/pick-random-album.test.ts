@@ -45,9 +45,14 @@ describe("pickRandomAlbum", () => {
   });
 
   test("returns an album from the filtered set when several match", () => {
-    const result = pickRandomAlbum(library, DEFAULT_ALBUM_TYPE_SELECTION);
+    const result = pickRandomAlbum(library, {
+      album: true,
+      single: true,
+      compilation: false,
+    });
     expect(result).not.toBeNull();
-    expect(["1", "2"]).toContain(result?.id);
+    if (!result) throw new Error("expected a pick");
+    expect(["1", "2"]).toContain(result.id);
   });
 
   test("re-shuffle membership: drawing repeatedly from the in-memory library returns members of the matching subset", () => {
@@ -57,7 +62,8 @@ describe("pickRandomAlbum", () => {
     for (let i = 0; i < 20; i++) {
       const pick = pickRandomAlbum(library, types);
       expect(pick).not.toBeNull();
-      expect(matchingIds).toContain(pick?.id);
+      if (!pick) throw new Error("expected a pick");
+      expect(matchingIds).toContain(pick.id);
     }
   });
 

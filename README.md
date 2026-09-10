@@ -41,6 +41,25 @@ bun dev
 
 5. Open [http://127.0.0.1:3000](http://127.0.0.1:3000). Do not use `localhost` due to Spotify's quirkyness about it.
 
+### WSL2 on Windows
+
+If `http://localhost:3000` works but `http://127.0.0.1:3000` does not, that is expected WSL2 behavior: Windows forwards `localhost` into WSL, but `127.0.0.1` on Windows stays on the Windows loopback and never reaches the Linux dev server.
+
+Create `%USERPROFILE%\.wslconfig`:
+
+```ini
+[wsl2]
+networkingMode=mirrored
+```
+
+Then restart WSL from PowerShell or CMD:
+
+```bat
+wsl --shutdown
+```
+
+Reopen your terminal and run `bun dev` again. Both `localhost` and `127.0.0.1` should reach the app.
+
 ## Tech stack
 
 - **Language**: TypeScript

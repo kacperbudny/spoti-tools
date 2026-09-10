@@ -59,3 +59,11 @@ _Avoid_: Login with email, register, sign up
 **Sign-out**:
 Ending this browser's Session only. Other Sessions stay signed in. It does not revoke Spotify's grant. This browser's person is a Visitor again until the next Sign-in.
 _Avoid_: Disconnect, unlink, revoke
+
+**Install**:
+Adding SpotiTools to a device's home screen or app launcher so it opens in its own window. Only Users see the affordance, on the Dashboard. Visitors never see it.
+_Avoid_: Add to Home Screen (as the domain act; platform UI may say that on iOS), PWA
+
+**Installed**:
+SpotiTools is already on the home screen, or the User is running it from that entry in standalone (not inside a browser tab). When Installed, the Install affordance is hidden.
+_Avoid_: App mode, standalone app
