@@ -65,7 +65,7 @@ export function subscribeIsInstalled(onStoreChange: () => void) {
   };
 }
 
-export function subscribeIsIos(): () => void {
+export function subscribeIsIos(_onStoreChange: () => void) {
   return () => {};
 }
 
