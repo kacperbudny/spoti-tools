@@ -71,11 +71,8 @@ export function useInstallAffordance() {
 
     if (action === "native-prompt" && deferredPrompt) {
       await deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
+      await deferredPrompt.userChoice;
       clearDeferredInstallPrompt();
-      if (outcome === "accepted") {
-        setInstalledThisSession(true);
-      }
     }
   }
 
