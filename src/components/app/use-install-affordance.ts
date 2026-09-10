@@ -8,25 +8,45 @@ import {
   subscribeDeferredInstallPrompt,
 } from "@/lib/install/deferred-install-prompt";
 import { resolveInstallAction } from "@/lib/install/install-action";
+import {
+  getIsDismissed,
+  getIsInstalled,
+  getIsIos,
+  getServerIsDismissed,
+  getServerIsInstalled,
+  getServerIsIos,
+  subscribeIsDismissed,
+  subscribeIsInstalled,
+  subscribeIsIos,
+  writeDismissed,
+} from "@/lib/install/install-environment";
 
 export function useInstallAffordance() {
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [isIos, setIsIos] = useState(false);
-  const [isDismissed, setIsDismissed] = useState(false);
+  const [installedThisSession, setInstalledThisSession] = useState(false);
+  const [dismissedThisSession, setDismissedThisSession] = useState(false);
   const [isIosInstructionsOpen, setIsIosInstructionsOpen] = useState(false);
+  const isInstalledEnvironment = useSyncExternalStore(
+    subscribeIsInstalled,
+    getIsInstalled,
+    getServerIsInstalled,
+  );
+  const isIos = useSyncExternalStore(subscribeIsIos, getIsIos, getServerIsIos);
+  const isDismissedStored = useSyncExternalStore(
+    subscribeIsDismissed,
+    getIsDismissed,
+    getServerIsDismissed,
+  );
   const deferredPrompt = useSyncExternalStore(
     subscribeDeferredInstallPrompt,
     getDeferredInstallPrompt,
     getServerDeferredInstallPrompt,
   );
+  const isInstalled = isInstalledEnvironment || installedThisSession;
+  const isDismissed = isDismissedStored || dismissedThisSession;
 
   useEffect(() => {
-    setIsInstalled(readIsInstalled());
-    setIsIos(readIsIos());
-    setIsDismissed(readIsDismissed());
-
     function handleAppInstalled() {
-      setIsInstalled(true);
+      setInstalledThisSession(true);
       clearDeferredInstallPrompt();
     }
 
@@ -54,14 +74,14 @@ export function useInstallAffordance() {
       const { outcome } = await deferredPrompt.userChoice;
       clearDeferredInstallPrompt();
       if (outcome === "accepted") {
-        setIsInstalled(true);
+        setInstalledThisSession(true);
       }
     }
   }
 
   function handleDismiss() {
     writeDismissed();
-    setIsDismissed(true);
+    setDismissedThisSession(true);
   }
 
   function handleIosInstructionsOpenChange(open: boolean) {
@@ -75,36 +95,4 @@ export function useInstallAffordance() {
     handleDismiss,
     handleIosInstructionsOpenChange,
   };
-}
-
-const DISMISSED_STORAGE_KEY = "spotitools.install.dismissed:v1";
-
-function readIsInstalled(): boolean {
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    ("standalone" in navigator && navigator.standalone === true)
-  );
-}
-
-function readIsIos(): boolean {
-  const userAgent = navigator.userAgent;
-  const isIpadOsDesktopMode =
-    userAgent.includes("Macintosh") && navigator.maxTouchPoints > 1;
-  return /iPhone|iPad|iPod/.test(userAgent) || isIpadOsDesktopMode;
-}
-
-function readIsDismissed(): boolean {
-  try {
-    return localStorage.getItem(DISMISSED_STORAGE_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function writeDismissed() {
-  try {
-    localStorage.setItem(DISMISSED_STORAGE_KEY, "1");
-  } catch {
-    // Private browsing or storage disabled: dismiss lasts for this page only.
-  }
 }
