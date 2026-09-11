@@ -57,7 +57,12 @@ export function RandomAlbumIdleForm() {
       {currentPick ? <AlbumPick album={currentPick} /> : null}
 
       {showReshuffle ? (
-        <Button type="button" onClick={handleDraw} disabled={isLoading}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={handleDraw}
+          disabled={isLoading}
+        >
           Re-shuffle
         </Button>
       ) : (
