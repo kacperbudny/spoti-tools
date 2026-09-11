@@ -19,7 +19,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         action={signInWithSpotify}
         className="flex w-full max-w-md flex-col items-center gap-4"
       >
-        <Button type="submit" variant="cta" size="lg">
+        <Button type="submit" size="lg">
           Sign-in with Spotify
         </Button>
         {error ? (

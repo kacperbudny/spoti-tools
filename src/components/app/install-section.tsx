@@ -39,7 +39,7 @@ export function InstallSection() {
           <p>Add SpotiTools to your home screen to use it as an app.</p>
         </CardContent>
         <CardFooter className="gap-2">
-          <Button type="button" onClick={handleInstall}>
+          <Button type="button" variant="secondary" onClick={handleInstall}>
             Install SpotiTools
           </Button>
           <Button type="button" variant="ghost" onClick={handleDismiss}>
