@@ -1,15 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Fraunces, Geist_Mono, Karla } from "next/font/google";
 import "@/app/globals.css";
 import { Providers } from "@/app/providers";
 import { THEME_COLOR } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const karla = Karla({
   subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-sans",
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-heading",
 });
 
 const geistMono = Geist_Mono({
@@ -23,12 +29,13 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "SpotiTools",
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
   },
 };
 
 export const viewport: Viewport = {
   themeColor: THEME_COLOR,
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -36,15 +43,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={cn(
-        "h-full",
-        "antialiased",
-        geistSans.variable,
+        "dark h-full antialiased font-sans",
+        karla.variable,
+        fraunces.variable,
         geistMono.variable,
-        "font-sans",
-        inter.variable,
       )}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex min-h-full flex-col">
         <Providers>{children}</Providers>
       </body>
     </html>
