@@ -7,6 +7,7 @@ import {
   getServerIsDismissed,
   getServerIsInstalled,
   getServerIsIos,
+  subscribeIsDismissed,
   writeDismissed,
 } from "@/lib/install/install-environment";
 
@@ -123,6 +124,19 @@ describe("install environment snapshots", () => {
         hasDeferredPrompt: true,
       }),
     ).toBe("hidden");
+  });
+
+  test("dismiss notifies same-tab subscribers so every Install site hides", () => {
+    stubWindow({ standalone: false });
+    stubLocalStorage();
+    let notified = 0;
+    const unsubscribe = subscribeIsDismissed(() => {
+      notified += 1;
+    });
+    writeDismissed();
+    unsubscribe();
+    expect(notified).toBe(1);
+    expect(getIsDismissed()).toBe(true);
   });
 });
 

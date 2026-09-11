@@ -1,11 +1,13 @@
 /**
- * Browser signals for the Dashboard Install affordance. Snapshots are read by
+ * Browser signals for the Install affordance. Snapshots are read by
  * `useSyncExternalStore` so SSR/hydration stay on the server values, then the
  * client values apply together — not one effect later than the deferred prompt.
  */
 
 const STANDALONE_MEDIA = "(display-mode: standalone)";
 const DISMISSED_STORAGE_KEY = "spotitools.install.dismissed:v1";
+
+const dismissedListeners = new Set<() => void>();
 
 export function getServerIsInstalled(): boolean {
   return false;
@@ -55,6 +57,7 @@ export function writeDismissed() {
   } catch {
     // Private browsing or storage disabled: dismiss lasts for this page only.
   }
+  notifyDismissed();
 }
 
 export function subscribeIsInstalled(onStoreChange: () => void) {
@@ -70,6 +73,8 @@ export function subscribeIsIos(_onStoreChange: () => void) {
 }
 
 export function subscribeIsDismissed(onStoreChange: () => void) {
+  dismissedListeners.add(onStoreChange);
+
   function onStorage(event: StorageEvent) {
     if (event.key === DISMISSED_STORAGE_KEY || event.key === null) {
       onStoreChange();
@@ -78,6 +83,13 @@ export function subscribeIsDismissed(onStoreChange: () => void) {
 
   window.addEventListener("storage", onStorage);
   return () => {
+    dismissedListeners.delete(onStoreChange);
     window.removeEventListener("storage", onStorage);
   };
+}
+
+function notifyDismissed() {
+  for (const listener of dismissedListeners) {
+    listener();
+  }
 }

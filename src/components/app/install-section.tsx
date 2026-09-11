@@ -58,6 +58,37 @@ export function InstallSection() {
   );
 }
 
+export function InstallNavFooter() {
+  const {
+    action,
+    isIosInstructionsOpen,
+    handleInstall,
+    handleDismiss,
+    handleIosInstructionsOpenChange,
+  } = useInstallAffordance();
+
+  if (action === "hidden") {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col items-stretch gap-1">
+      <Button type="button" variant="ghost" onClick={handleInstall}>
+        Install
+      </Button>
+      <Button type="button" variant="ghost" onClick={handleDismiss}>
+        Not now
+      </Button>
+      {action === "ios-instructions" ? (
+        <IosInstructionsDialog
+          open={isIosInstructionsOpen}
+          onOpenChange={handleIosInstructionsOpenChange}
+        />
+      ) : null}
+    </div>
+  );
+}
+
 type IosInstructionsDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
