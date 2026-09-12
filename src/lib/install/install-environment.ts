@@ -8,6 +8,7 @@ const STANDALONE_MEDIA = "(display-mode: standalone)";
 const DISMISSED_STORAGE_KEY = "spotitools.install.dismissed:v1";
 
 const dismissedListeners = new Set<() => void>();
+let dismissedThisPage = false;
 
 export function getServerIsInstalled(): boolean {
   return false;
@@ -47,7 +48,7 @@ export function getIsDismissed(): boolean {
   try {
     return localStorage.getItem(DISMISSED_STORAGE_KEY) === "1";
   } catch {
-    return false;
+    return dismissedThisPage;
   }
 }
 
@@ -56,6 +57,7 @@ export function writeDismissed() {
     localStorage.setItem(DISMISSED_STORAGE_KEY, "1");
   } catch {
     // Private browsing or storage disabled: dismiss lasts for this page only.
+    dismissedThisPage = true;
   }
   notifyDismissed();
 }

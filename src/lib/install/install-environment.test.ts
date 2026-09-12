@@ -138,6 +138,20 @@ describe("install environment snapshots", () => {
     expect(notified).toBe(1);
     expect(getIsDismissed()).toBe(true);
   });
+
+  test("page-only dismiss hides every Install site when storage is disabled", () => {
+    stubWindow({ standalone: false });
+    stubThrowingLocalStorage();
+    expect(getIsDismissed()).toBe(false);
+    let snapshotWhenNotified = false;
+    const unsubscribe = subscribeIsDismissed(() => {
+      snapshotWhenNotified = getIsDismissed();
+    });
+    writeDismissed();
+    unsubscribe();
+    expect(snapshotWhenNotified).toBe(true);
+    expect(getIsDismissed()).toBe(true);
+  });
 });
 
 function stubWindow({ standalone }: { standalone: boolean }) {
@@ -168,6 +182,20 @@ function stubLocalStorage() {
       },
       setItem(key: string, value: string) {
         store.set(key, value);
+      },
+    },
+  });
+}
+
+function stubThrowingLocalStorage() {
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem() {
+        throw new Error("storage disabled");
+      },
+      setItem() {
+        throw new Error("storage disabled");
       },
     },
   });
