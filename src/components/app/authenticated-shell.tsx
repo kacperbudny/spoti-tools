@@ -23,16 +23,16 @@ import { cn } from "@/lib/utils";
 type AuthenticatedShellProps = {
   displayName: string;
   email: string;
-  pathname: string;
   children?: ReactNode;
 };
 
 export function AuthenticatedShell({
   displayName,
   email,
-  pathname,
   children,
 }: AuthenticatedShellProps) {
+  const pathname = usePathname();
+
   return (
     <div className="flex flex-1">
       <nav
@@ -93,27 +93,6 @@ export function AuthenticatedShell({
         </main>
       </div>
     </div>
-  );
-}
-
-export function AuthenticatedShellFromRoute({
-  displayName,
-  email,
-  children,
-}: {
-  displayName: string;
-  email: string;
-  children: ReactNode;
-}) {
-  const pathname = usePathname();
-  return (
-    <AuthenticatedShell
-      displayName={displayName}
-      email={email}
-      pathname={pathname}
-    >
-      {children}
-    </AuthenticatedShell>
   );
 }
 

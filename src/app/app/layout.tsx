@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { AuthenticatedShellFromRoute } from "@/components/app/authenticated-shell";
+import { AuthenticatedShell } from "@/components/app/authenticated-shell";
 import { getSession } from "@/lib/auth/session";
 
 export default async function DashboardLayout({
@@ -12,11 +12,11 @@ export default async function DashboardLayout({
   }
 
   return (
-    <AuthenticatedShellFromRoute
+    <AuthenticatedShell
       displayName={session.user.name}
       email={session.user.email}
     >
       {children}
-    </AuthenticatedShellFromRoute>
+    </AuthenticatedShell>
   );
 }

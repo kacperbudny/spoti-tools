@@ -20,6 +20,12 @@ mock.module("@/lib/install/install-action", () => ({
   resolveInstallAction: () => "native-prompt",
 }));
 
+let pathname = "/app";
+
+mock.module("next/navigation", () => ({
+  usePathname: () => pathname,
+}));
+
 const { AuthenticatedShell } = await import(
   "@/components/app/authenticated-shell"
 );
@@ -28,13 +34,8 @@ afterEach(cleanup);
 
 describe("AuthenticatedShell", () => {
   test("desktop nav lists Dashboard and Random album destinations", () => {
-    render(
-      <AuthenticatedShell
-        displayName="Ada"
-        email="ada@example.com"
-        pathname="/app"
-      />,
-    );
+    pathname = "/app";
+    render(<AuthenticatedShell displayName="Ada" email="ada@example.com" />);
 
     const nav = screen.getByRole("navigation");
     expect(
@@ -48,13 +49,8 @@ describe("AuthenticatedShell", () => {
   });
 
   test("desktop nav includes Sign-out", () => {
-    render(
-      <AuthenticatedShell
-        displayName="Ada"
-        email="ada@example.com"
-        pathname="/app"
-      />,
-    );
+    pathname = "/app";
+    render(<AuthenticatedShell displayName="Ada" email="ada@example.com" />);
 
     expect(
       within(screen.getByRole("navigation")).getByRole("button", {
@@ -64,13 +60,8 @@ describe("AuthenticatedShell", () => {
   });
 
   test("phone Dashboard top bar shows display name and Sign-out", () => {
-    render(
-      <AuthenticatedShell
-        displayName="Ada"
-        email="ada@example.com"
-        pathname="/app"
-      />,
-    );
+    pathname = "/app";
+    render(<AuthenticatedShell displayName="Ada" email="ada@example.com" />);
 
     const topBar = screen.getByRole("banner");
     expect(within(topBar).getByText("Ada")).toBeTruthy();
@@ -80,13 +71,8 @@ describe("AuthenticatedShell", () => {
   });
 
   test("phone Tool top bar is Back to Dashboard only", () => {
-    render(
-      <AuthenticatedShell
-        displayName="Ada"
-        email="ada@example.com"
-        pathname="/app/random-album"
-      />,
-    );
+    pathname = "/app/random-album";
+    render(<AuthenticatedShell displayName="Ada" email="ada@example.com" />);
 
     const topBar = screen.getByRole("banner");
     expect(
@@ -101,13 +87,8 @@ describe("AuthenticatedShell", () => {
   });
 
   test("desktop nav footer includes a quiet Install", () => {
-    render(
-      <AuthenticatedShell
-        displayName="Ada"
-        email="ada@example.com"
-        pathname="/app"
-      />,
-    );
+    pathname = "/app";
+    render(<AuthenticatedShell displayName="Ada" email="ada@example.com" />);
 
     expect(
       within(screen.getByRole("navigation")).getByRole("button", {
@@ -117,13 +98,8 @@ describe("AuthenticatedShell", () => {
   });
 
   test("desktop nav still includes Install on a Tool page", () => {
-    render(
-      <AuthenticatedShell
-        displayName="Ada"
-        email="ada@example.com"
-        pathname="/app/random-album"
-      />,
-    );
+    pathname = "/app/random-album";
+    render(<AuthenticatedShell displayName="Ada" email="ada@example.com" />);
 
     expect(
       within(screen.getByRole("navigation")).getByRole("button", {
@@ -133,13 +109,8 @@ describe("AuthenticatedShell", () => {
   });
 
   test("phone Tool top bar does not include Install", () => {
-    render(
-      <AuthenticatedShell
-        displayName="Ada"
-        email="ada@example.com"
-        pathname="/app/random-album"
-      />,
-    );
+    pathname = "/app/random-album";
+    render(<AuthenticatedShell displayName="Ada" email="ada@example.com" />);
 
     expect(
       within(screen.getByRole("banner")).queryByRole("button", {
@@ -149,13 +120,8 @@ describe("AuthenticatedShell", () => {
   });
 
   test("desktop nav groups tool destinations under a Tools label", () => {
-    render(
-      <AuthenticatedShell
-        displayName="Ada"
-        email="ada@example.com"
-        pathname="/app"
-      />,
-    );
+    pathname = "/app";
+    render(<AuthenticatedShell displayName="Ada" email="ada@example.com" />);
 
     expect(
       within(screen.getByRole("navigation")).getByText("Tools"),
@@ -163,13 +129,8 @@ describe("AuthenticatedShell", () => {
   });
 
   test("desktop nav footer shows the user's name and email with a Sign-out control", () => {
-    render(
-      <AuthenticatedShell
-        displayName="Ada"
-        email="ada@example.com"
-        pathname="/app"
-      />,
-    );
+    pathname = "/app";
+    render(<AuthenticatedShell displayName="Ada" email="ada@example.com" />);
 
     const nav = screen.getByRole("navigation");
     expect(within(nav).getByText("Ada")).toBeTruthy();
