@@ -16,7 +16,7 @@ import {
   DASHBOARD_HREF,
   TOOL_DESTINATIONS,
 } from "@/components/app/tool-destinations";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { signOut } from "@/lib/auth/actions";
 import { cn } from "@/lib/utils";
 
@@ -33,28 +33,16 @@ export function AuthenticatedShell({
   pathname,
   children,
 }: AuthenticatedShellProps) {
-  const isDashboard = isDashboardPath(pathname);
-
   return (
     <div className="flex flex-1">
-      <nav className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
+      <nav
+        aria-label="Primary"
+        className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex"
+      >
         <div className="relative overflow-hidden px-5 pt-6 pb-5">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -top-10 -left-8 size-32 rounded-full bg-cta/25 blur-3xl"
-          />
-          <div className="relative flex items-center gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-cta text-cta-foreground shadow-[0_0_20px_color-mix(in_oklch,var(--cta),transparent_65%)]">
-              <Waves aria-hidden className="size-5" />
-            </span>
-            <div className="flex min-w-0 flex-col leading-tight">
-              <span className="truncate text-lg font-medium tracking-tight">
-                SpotiTools
-              </span>
-              <span className="truncate text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                Spotify toolbox
-              </span>
-            </div>
+          <BrandGlow />
+          <div className="relative">
+            <BrandLockup />
           </div>
         </div>
 
@@ -95,42 +83,11 @@ export function AuthenticatedShell({
 
         <div className="flex flex-col gap-3 border-t border-sidebar-border p-3">
           <InstallNavFooter />
-          <div className="flex items-center gap-3 rounded-2xl bg-sidebar-accent px-3 py-2.5">
-            <span
-              aria-hidden
-              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-foreground/10 font-heading text-sm font-medium"
-            >
-              {initials(displayName)}
-            </span>
-            <div className="flex min-w-0 flex-1 flex-col leading-tight">
-              <span className="truncate text-sm font-medium">
-                {displayName}
-              </span>
-              <span className="truncate text-xs text-muted-foreground">
-                {email}
-              </span>
-            </div>
-            <SignOutIconButton />
-          </div>
+          <UserChip displayName={displayName} email={email} />
         </div>
       </nav>
       <div className="flex min-w-0 flex-1 flex-col">
-        {isDashboard ? (
-          <header className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 md:hidden">
-            <p className="text-sm font-medium">{displayName}</p>
-            <SignOutButton />
-          </header>
-        ) : (
-          <header className="flex items-center border-b border-border px-4 py-3 md:hidden">
-            <Link
-              href={DASHBOARD_HREF}
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <ArrowLeft aria-hidden className="size-4" />
-              Back to Dashboard
-            </Link>
-          </header>
-        )}
+        <MobileTopBar displayName={displayName} pathname={pathname} />
         <main className="flex flex-1 flex-col items-center gap-8 p-8">
           {children}
         </main>
@@ -165,10 +122,6 @@ type IconComponent = typeof LayoutDashboard;
 const TOOL_ICONS: Record<string, IconComponent> = {
   "/app/random-album": Disc3,
 };
-
-function isDashboardPath(pathname: string) {
-  return isCurrentPath(pathname, DASHBOARD_HREF);
-}
 
 function isCurrentPath(pathname: string, href: string) {
   return pathname === href || pathname === `${href}/`;
@@ -215,13 +168,96 @@ function NavLink({
   );
 }
 
-function SignOutButton() {
+function MobileTopBar({
+  displayName,
+  pathname,
+}: {
+  displayName: string;
+  pathname: string;
+}) {
+  const isDashboard = isCurrentPath(pathname, DASHBOARD_HREF);
+
   return (
-    <form action={signOut}>
-      <Button type="submit" variant="outline">
-        Sign-out
-      </Button>
-    </form>
+    <header className="sticky top-0 z-20 border-b border-sidebar-border bg-sidebar pt-[env(safe-area-inset-top)] text-sidebar-foreground md:hidden">
+      <div className="flex h-14 items-center justify-between gap-3 px-4">
+        {isDashboard ? (
+          <>
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-2xl bg-cta text-cta-foreground shadow-[0_0_20px_color-mix(in_oklch,var(--cta),transparent_65%)]">
+              <Waves aria-hidden className="size-4" />
+            </span>
+            <div className="flex min-w-0 items-center gap-2">
+              <span
+                aria-hidden
+                className="flex size-7 shrink-0 items-center justify-center rounded-full bg-foreground/10 font-heading text-xs font-medium"
+              >
+                {initials(displayName)}
+              </span>
+              <span className="truncate text-sm font-medium">{displayName}</span>
+              <SignOutIconButton />
+            </div>
+          </>
+        ) : (
+          <Link
+            href={DASHBOARD_HREF}
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
+          >
+            <ArrowLeft aria-hidden className="size-4" />
+            Back to Dashboard
+          </Link>
+        )}
+      </div>
+    </header>
+  );
+}
+
+function BrandGlow() {
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute -top-10 -left-8 size-32 rounded-full bg-cta/25 blur-3xl"
+    />
+  );
+}
+
+function BrandLockup() {
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-cta text-cta-foreground shadow-[0_0_20px_color-mix(in_oklch,var(--cta),transparent_65%)]">
+        <Waves aria-hidden className="size-5" />
+      </span>
+      <div className="flex min-w-0 flex-col leading-tight">
+        <span className="truncate text-lg font-medium tracking-tight">
+          SpotiTools
+        </span>
+        <span className="truncate text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+          Spotify toolbox
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function UserChip({
+  displayName,
+  email,
+}: {
+  displayName: string;
+  email: string;
+}) {
+  return (
+    <div className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl bg-sidebar-accent px-3 py-2.5">
+      <span
+        aria-hidden
+        className="flex size-9 shrink-0 items-center justify-center rounded-full bg-foreground/10 font-heading text-sm font-medium"
+      >
+        {initials(displayName)}
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col leading-tight">
+        <span className="truncate text-sm font-medium">{displayName}</span>
+        <span className="truncate text-xs text-muted-foreground">{email}</span>
+      </div>
+      <SignOutIconButton />
+    </div>
   );
 }
 
