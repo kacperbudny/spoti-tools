@@ -39,7 +39,7 @@ export function InstallSection() {
           <p>Add SpotiTools to your home screen to use it as an app.</p>
         </CardContent>
         <CardFooter className="gap-2">
-          <Button type="button" onClick={handleInstall}>
+          <Button type="button" variant="secondary" onClick={handleInstall}>
             Install SpotiTools
           </Button>
           <Button type="button" variant="ghost" onClick={handleDismiss}>
@@ -55,6 +55,37 @@ export function InstallSection() {
         />
       ) : null}
     </section>
+  );
+}
+
+export function InstallNavFooter() {
+  const {
+    action,
+    isIosInstructionsOpen,
+    handleInstall,
+    handleDismiss,
+    handleIosInstructionsOpenChange,
+  } = useInstallAffordance();
+
+  if (action === "hidden") {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col items-stretch gap-1">
+      <Button type="button" variant="ghost" onClick={handleInstall}>
+        Install
+      </Button>
+      <Button type="button" variant="ghost" onClick={handleDismiss}>
+        Not now
+      </Button>
+      {action === "ios-instructions" ? (
+        <IosInstructionsDialog
+          open={isIosInstructionsOpen}
+          onOpenChange={handleIosInstructionsOpenChange}
+        />
+      ) : null}
+    </div>
   );
 }
 

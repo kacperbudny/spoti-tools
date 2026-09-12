@@ -3,6 +3,6 @@
   "compilerOptions": {
     "types": ["bun-types"]
   },
-  "include": ["**/*.test.ts"],
+  "include": ["**/*.test.ts", "**/*.test.tsx"],
   "exclude": ["node_modules"]
 }

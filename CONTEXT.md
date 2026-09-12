@@ -61,7 +61,7 @@ Ending this browser's Session only. Other Sessions stay signed in. It does not r
 _Avoid_: Disconnect, unlink, revoke
 
 **Install**:
-Adding SpotiTools to a device's home screen or app launcher so it opens in its own window. Only Users see the affordance, on the Dashboard. Visitors never see it.
+Adding SpotiTools to a device's home screen or app launcher so it opens in its own window. Only Users see the affordance: on the Dashboard, and on desktop also in the signed-in nav footer. Visitors never see it. Tool pages do not show it.
 _Avoid_: Add to Home Screen (as the domain act; platform UI may say that on iOS), PWA
 
 **Installed**:
