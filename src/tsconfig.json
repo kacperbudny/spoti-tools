@@ -1,0 +1,10 @@
+{
+  // tsserver only auto-loads files named tsconfig.json. The root config
+  // excludes tests, so without this file the editor treats them as orphans
+  // (no @/ paths, no bun:test types). Typecheck still uses tsconfig.test.json.
+  "extends": "../tsconfig.test.json",
+  "compilerOptions": {
+    "baseUrl": ".."
+  },
+  "include": ["./**/*.test.ts", "./**/*.test.tsx"]
+}
