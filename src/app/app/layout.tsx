@@ -12,7 +12,10 @@ export default async function DashboardLayout({
   }
 
   return (
-    <AuthenticatedShellFromRoute displayName={session.user.name}>
+    <AuthenticatedShellFromRoute
+      displayName={session.user.name}
+      email={session.user.email}
+    >
       {children}
     </AuthenticatedShellFromRoute>
   );
