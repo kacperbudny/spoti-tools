@@ -12,13 +12,14 @@ import { cn } from "@/lib/utils";
 export function RandomAlbumStage() {
   const {
     selection,
-    currentPick: pick,
+    currentPick,
     progress,
     errorMessage,
     isLoading,
-    handleToggle: onToggle,
-    handleDraw: onDraw,
+    handleToggle,
+    handleDraw,
   } = useRandomAlbum();
+
   return (
     <section className="flex w-full max-w-lg flex-1 flex-col gap-8 pb-[env(safe-area-inset-bottom)]">
       <header className="flex flex-col gap-5">
@@ -42,7 +43,7 @@ export function RandomAlbumStage() {
               className={cn(
                 "flex min-w-0 flex-col items-center gap-1.5 rounded-2xl px-1 py-2 text-center text-xs leading-tight md:flex-row md:items-center md:gap-2 md:px-3 md:text-left md:text-sm",
                 selection[type]
-                  ? "bg-cta/15 text-foreground"
+                  ? "bg-foreground/10 text-foreground"
                   : "bg-muted/60 text-muted-foreground",
               )}
             >
@@ -52,7 +53,7 @@ export function RandomAlbumStage() {
               <Switch
                 size="sm"
                 checked={selection[type]}
-                onCheckedChange={() => onToggle(type)}
+                onCheckedChange={() => handleToggle(type)}
                 aria-labelledby={`album-type-${type}-label`}
                 className="data-checked:border-cta data-checked:bg-cta [&_[data-slot=switch-thumb]]:data-checked:bg-cta-foreground"
               />
@@ -78,12 +79,12 @@ export function RandomAlbumStage() {
         </p>
       ) : null}
 
-      {pick ? (
+      {currentPick ? (
         <div className="flex flex-col gap-6">
-          <AlbumPick album={pick} />
+          <AlbumPick album={currentPick} />
           <div className="flex flex-col gap-2">
             <a
-              href={pick.listenUrl}
+              href={currentPick.listenUrl}
               target="_blank"
               rel="noreferrer"
               className={cn(buttonVariants({ size: "lg" }), "h-12 w-full")}
@@ -93,7 +94,7 @@ export function RandomAlbumStage() {
             <Button
               type="button"
               variant="ghost"
-              onClick={onDraw}
+              onClick={handleDraw}
               disabled={isLoading}
               className="w-full text-muted-foreground"
             >
@@ -107,7 +108,7 @@ export function RandomAlbumStage() {
             type="button"
             size="lg"
             className="h-12 w-full"
-            onClick={onDraw}
+            onClick={handleDraw}
             disabled={isLoading}
           >
             Start
