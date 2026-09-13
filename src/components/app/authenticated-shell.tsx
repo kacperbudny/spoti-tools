@@ -39,11 +39,8 @@ export function AuthenticatedShell({
         aria-label="Primary"
         className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex"
       >
-        <div className="relative overflow-hidden px-5 pt-6 pb-5">
-          <BrandGlow />
-          <div className="relative">
-            <BrandLockup />
-          </div>
+        <div className="px-5 pt-6 pb-5">
+          <BrandLockup />
         </div>
 
         <div className="h-px shrink-0 bg-sidebar-border" />
@@ -161,7 +158,7 @@ function MobileTopBar({
       <div className="flex h-14 items-center justify-between gap-3 px-4">
         {isDashboard ? (
           <>
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-2xl bg-cta text-cta-foreground shadow-[0_0_20px_color-mix(in_oklch,var(--cta),transparent_65%)]">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-2xl bg-cta text-cta-foreground">
               <Waves aria-hidden className="size-4" />
             </span>
             <div className="flex min-w-0 items-center gap-2">
@@ -171,7 +168,9 @@ function MobileTopBar({
               >
                 {initials(displayName)}
               </span>
-              <span className="truncate text-sm font-medium">{displayName}</span>
+              <span className="truncate text-sm font-medium">
+                {displayName}
+              </span>
               <SignOutIconButton />
             </div>
           </>
@@ -189,19 +188,10 @@ function MobileTopBar({
   );
 }
 
-function BrandGlow() {
-  return (
-    <div
-      aria-hidden
-      className="pointer-events-none absolute -top-10 -left-8 size-32 rounded-full bg-cta/25 blur-3xl"
-    />
-  );
-}
-
 function BrandLockup() {
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-cta text-cta-foreground shadow-[0_0_20px_color-mix(in_oklch,var(--cta),transparent_65%)]">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-cta text-cta-foreground">
         <Waves aria-hidden className="size-5" />
       </span>
       <div className="flex min-w-0 flex-col leading-tight">

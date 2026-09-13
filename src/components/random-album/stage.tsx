@@ -1,5 +1,6 @@
 "use client";
 
+import { Disc3 } from "lucide-react";
 import { AlbumPick } from "@/components/random-album/album-pick";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -34,18 +35,27 @@ export function RandomAlbumStage({
   return (
     <section className="flex w-full max-w-lg flex-1 flex-col gap-8 pb-[env(safe-area-inset-bottom)]">
       <header className="flex flex-col gap-5">
-        <h1 className="font-heading text-3xl font-medium tracking-tight">
+        <h1 className="flex items-center gap-3 font-heading text-3xl font-medium tracking-tight">
+          <span
+            aria-hidden
+            className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-cta text-cta-foreground"
+          >
+            <Disc3 className="size-5" />
+          </span>
           Random album
         </h1>
-        <fieldset className="flex flex-wrap gap-2" disabled={isLoading}>
+        <fieldset
+          className="grid w-full grid-cols-3 gap-2 md:flex md:w-auto md:flex-wrap"
+          disabled={isLoading}
+        >
           <legend className="sr-only">Album type</legend>
           {ALBUM_TYPES.map((type) => (
             <div
               key={type}
               className={cn(
-                "flex items-center gap-2 rounded-2xl px-3 py-2 text-sm",
+                "flex min-w-0 flex-col items-center gap-1.5 rounded-2xl px-1 py-2 text-center text-xs leading-tight md:flex-row md:items-center md:gap-2 md:px-3 md:text-left md:text-sm",
                 selection[type]
-                  ? "bg-foreground/10 text-foreground"
+                  ? "bg-cta/15 text-foreground"
                   : "bg-muted/60 text-muted-foreground",
               )}
             >
@@ -57,6 +67,7 @@ export function RandomAlbumStage({
                 checked={selection[type]}
                 onCheckedChange={() => onToggle(type)}
                 aria-labelledby={`album-type-${type}-label`}
+                className="data-checked:border-cta data-checked:bg-cta [&_[data-slot=switch-thumb]]:data-checked:bg-cta-foreground"
               />
             </div>
           ))}
