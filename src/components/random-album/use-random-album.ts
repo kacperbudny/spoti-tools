@@ -18,7 +18,7 @@ import {
 } from "@/lib/random-album/library-client";
 import { pickRandomAlbum } from "@/lib/random-album/pick-random-album";
 
-export function useRandomAlbumIdleForm() {
+export function useRandomAlbum() {
   const router = useRouter();
   const [selection, setSelection] = useState<AlbumTypeSelection>(
     DEFAULT_ALBUM_TYPE_SELECTION,
@@ -108,7 +108,6 @@ export function useRandomAlbumIdleForm() {
     currentPick,
     progress,
     errorMessage: formError ?? libraryError,
-    showReshuffle: currentPick !== null,
     isLoading: libraryMutation.isPending,
     handleToggle,
     handleDraw,

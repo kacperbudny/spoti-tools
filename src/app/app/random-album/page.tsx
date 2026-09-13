@@ -1,5 +1,5 @@
-import { RandomAlbumIdleForm } from "@/components/random-album/idle-form";
+import { RandomAlbumStage } from "@/components/random-album/stage";
 
 export default function RandomAlbumPage() {
-  return <RandomAlbumIdleForm />;
+  return <RandomAlbumStage />;
 }
