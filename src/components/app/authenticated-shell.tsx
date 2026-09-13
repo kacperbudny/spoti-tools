@@ -2,7 +2,6 @@
 
 import {
   ArrowLeft,
-  Disc3,
   LayoutDashboard,
   LogOut,
   Waves,
@@ -15,6 +14,7 @@ import { InstallNavFooter } from "@/components/app/install-section";
 import {
   DASHBOARD_HREF,
   TOOL_DESTINATIONS,
+  TOOL_ICONS,
 } from "@/components/app/tool-destinations";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { signOut } from "@/lib/auth/actions";
@@ -94,10 +94,6 @@ export function AuthenticatedShell({
 }
 
 type IconComponent = typeof LayoutDashboard;
-
-const TOOL_ICONS: Record<string, IconComponent> = {
-  "/app/random-album": Disc3,
-};
 
 function isCurrentPath(pathname: string, href: string) {
   return pathname === href || pathname === `${href}/`;
