@@ -2,36 +2,23 @@
 
 import { Disc3 } from "lucide-react";
 import { AlbumPick } from "@/components/random-album/album-pick";
+import { useRandomAlbum } from "@/components/random-album/use-random-album";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
-import type { Album } from "@/lib/random-album/album";
-import {
-  ALBUM_TYPE_LABELS,
-  ALBUM_TYPES,
-  type AlbumType,
-  type AlbumTypeSelection,
-} from "@/lib/random-album/album-types";
+import { ALBUM_TYPE_LABELS, ALBUM_TYPES } from "@/lib/random-album/album-types";
 import { cn } from "@/lib/utils";
 
-type RandomAlbumStageProps = {
-  selection: AlbumTypeSelection;
-  pick: Album | null;
-  progress: { loaded: number; total: number } | null;
-  errorMessage: string | null;
-  isLoading: boolean;
-  onToggle: (type: AlbumType) => void;
-  onDraw: () => void;
-};
-
-export function RandomAlbumStage({
-  selection,
-  pick,
-  progress,
-  errorMessage,
-  isLoading,
-  onToggle,
-  onDraw,
-}: RandomAlbumStageProps) {
+export function RandomAlbumStage() {
+  const {
+    selection,
+    currentPick: pick,
+    progress,
+    errorMessage,
+    isLoading,
+    handleToggle: onToggle,
+    handleDraw: onDraw,
+  } = useRandomAlbum();
   return (
     <section className="flex w-full max-w-lg flex-1 flex-col gap-8 pb-[env(safe-area-inset-bottom)]">
       <header className="flex flex-col gap-5">
@@ -75,9 +62,14 @@ export function RandomAlbumStage({
       </header>
 
       {isLoading && progress ? (
-        <p aria-live="polite" className="text-sm text-muted-foreground">
-          Loading Library: {progress.loaded} out of {progress.total}…
-        </p>
+        <Progress
+          value={libraryLoadPercent(progress)}
+          className="w-full flex-col gap-2"
+        >
+          <p aria-live="polite" className="text-sm text-muted-foreground">
+            Loading Library: {progress.loaded} out of {progress.total}…
+          </p>
+        </Progress>
       ) : null}
 
       {errorMessage ? (
@@ -124,4 +116,12 @@ export function RandomAlbumStage({
       )}
     </section>
   );
+}
+
+function libraryLoadPercent(progress: { loaded: number; total: number }) {
+  if (progress.total === 0) {
+    return 0;
+  }
+
+  return (progress.loaded / progress.total) * 100;
 }

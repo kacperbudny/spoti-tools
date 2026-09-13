@@ -1,24 +1,24 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, render, screen } from "@testing-library/react";
-import { RandomAlbumStage } from "@/components/random-album/stage";
 import type { Album } from "@/lib/random-album/album";
 import { DEFAULT_ALBUM_TYPE_SELECTION } from "@/lib/random-album/album-types";
 
-afterEach(cleanup);
+let stage = idleStage();
 
-const idleProps = {
-  selection: DEFAULT_ALBUM_TYPE_SELECTION,
-  pick: null,
-  progress: null,
-  errorMessage: null,
-  isLoading: false,
-  onToggle: mock(() => {}),
-  onDraw: mock(() => {}),
-};
+mock.module("@/components/random-album/use-random-album", () => ({
+  useRandomAlbum: () => stage,
+}));
+
+const { RandomAlbumStage } = await import("@/components/random-album/stage");
+
+afterEach(() => {
+  cleanup();
+  stage = idleStage();
+});
 
 describe("RandomAlbumStage", () => {
   test("idle stage shows the Tool title, album types, and Start", () => {
-    render(<RandomAlbumStage {...idleProps} />);
+    render(<RandomAlbumStage />);
 
     expect(screen.getByRole("heading", { name: "Random album" })).toBeTruthy();
     expect(screen.getByRole("switch", { name: "Album" })).toBeTruthy();
@@ -29,7 +29,8 @@ describe("RandomAlbumStage", () => {
   });
 
   test("Pick stage shows cover, metadata, Listen on Spotify, Re-shuffle, and types", () => {
-    render(<RandomAlbumStage {...idleProps} pick={nightDrive} />);
+    stage = idleStage({ currentPick: nightDrive });
+    render(<RandomAlbumStage />);
 
     expect(
       screen.getByRole("img", { name: "Night Drive cover art" }),
@@ -49,12 +50,11 @@ describe("RandomAlbumStage", () => {
   });
 
   test("empty Library message stays on the stage with Start", () => {
-    render(
-      <RandomAlbumStage
-        {...idleProps}
-        errorMessage="The Library has no saved albums. Save some on Spotify and try again."
-      />,
-    );
+    stage = idleStage({
+      errorMessage:
+        "The Library has no saved albums. Save some on Spotify and try again.",
+    });
+    render(<RandomAlbumStage />);
 
     expect(screen.getByRole("alert").textContent).toBe(
       "The Library has no saved albums. Save some on Spotify and try again.",
@@ -67,12 +67,11 @@ describe("RandomAlbumStage", () => {
   });
 
   test("no-match message stays on the stage with Start", () => {
-    render(
-      <RandomAlbumStage
-        {...idleProps}
-        errorMessage="Nothing in the Library matches these types. Turn on another type or try again."
-      />,
-    );
+    stage = idleStage({
+      errorMessage:
+        "Nothing in the Library matches these types. Turn on another type or try again.",
+    });
+    render(<RandomAlbumStage />);
 
     expect(screen.getByRole("alert").textContent).toBe(
       "Nothing in the Library matches these types. Turn on another type or try again.",
@@ -82,12 +81,10 @@ describe("RandomAlbumStage", () => {
   });
 
   test("select at least one album type stays on the stage", () => {
-    render(
-      <RandomAlbumStage
-        {...idleProps}
-        errorMessage="Select at least one album type."
-      />,
-    );
+    stage = idleStage({
+      errorMessage: "Select at least one album type.",
+    });
+    render(<RandomAlbumStage />);
 
     expect(screen.getByRole("alert").textContent).toBe(
       "Select at least one album type.",
@@ -97,21 +94,46 @@ describe("RandomAlbumStage", () => {
   });
 
   test("Start and Re-shuffle ask for a draw", () => {
-    const onDraw = mock(() => {});
-    const { rerender } = render(
-      <RandomAlbumStage {...idleProps} onDraw={onDraw} />,
-    );
+    const handleDraw = mock(() => {});
+    stage = idleStage({ handleDraw });
+    const { rerender } = render(<RandomAlbumStage />);
 
     screen.getByRole("button", { name: "Start" }).click();
-    expect(onDraw).toHaveBeenCalledTimes(1);
+    expect(handleDraw).toHaveBeenCalledTimes(1);
 
-    rerender(
-      <RandomAlbumStage {...idleProps} pick={nightDrive} onDraw={onDraw} />,
-    );
+    stage = idleStage({ currentPick: nightDrive, handleDraw });
+    rerender(<RandomAlbumStage />);
     screen.getByRole("button", { name: "Re-shuffle" }).click();
-    expect(onDraw).toHaveBeenCalledTimes(2);
+    expect(handleDraw).toHaveBeenCalledTimes(2);
+  });
+
+  test("Library crawl shows a progress bar and the count", () => {
+    stage = idleStage({
+      isLoading: true,
+      progress: { loaded: 20, total: 100 },
+    });
+    render(<RandomAlbumStage />);
+
+    expect(screen.getByRole("progressbar")).toBeTruthy();
+    expect(screen.getByText("Loading Library: 20 out of 100…")).toBeTruthy();
   });
 });
+
+function idleStage(overrides: Partial<ReturnType<typeof defaultStage>> = {}) {
+  return { ...defaultStage(), ...overrides };
+}
+
+function defaultStage() {
+  return {
+    selection: DEFAULT_ALBUM_TYPE_SELECTION,
+    currentPick: null as Album | null,
+    progress: null as { loaded: number; total: number } | null,
+    errorMessage: null as string | null,
+    isLoading: false,
+    handleToggle: mock(() => {}),
+    handleDraw: mock(() => {}),
+  };
+}
 
 const nightDrive: Album = {
   id: "night-drive",

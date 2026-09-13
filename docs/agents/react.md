@@ -4,7 +4,7 @@
 
 Move non-trivial state, data fetching, and event handlers out of components into custom hooks. Components should mostly render UI from hook return values.
 
-Colocate feature hooks next to the component that uses them (e.g. `use-random-album-idle-form.ts` beside `idle-form.tsx`). Extract shared hooks to `src/hooks/` only when reused across features.
+Colocate feature hooks next to the component that uses them (e.g. `use-random-album.ts` beside `stage.tsx`). Extract shared hooks to `src/hooks/` only when reused across features.
 
 ## File layout
 
