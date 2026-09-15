@@ -86,15 +86,17 @@ describe("AuthenticatedShell", () => {
     expect(within(topBar).queryByText("Ada")).toBeNull();
   });
 
-  test("desktop nav footer includes a quiet Install", () => {
+  test("desktop nav footer explains Install and how to dismiss it", () => {
     pathname = "/app";
     render(<AuthenticatedShell displayName="Ada" email="ada@example.com" />);
 
+    const nav = screen.getByRole("navigation");
     expect(
-      within(screen.getByRole("navigation")).getByRole("button", {
-        name: "Install",
-      }),
+      within(nav).getByText("Install as an", { exact: false }),
     ).toBeTruthy();
+    expect(within(nav).getByText("Add it to your home screen.")).toBeTruthy();
+    expect(within(nav).getByRole("button", { name: "Install" })).toBeTruthy();
+    expect(within(nav).getByRole("button", { name: "Hide" })).toBeTruthy();
   });
 
   test("desktop nav still includes Install on a Tool page", () => {

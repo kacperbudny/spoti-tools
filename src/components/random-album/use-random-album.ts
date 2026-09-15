@@ -115,10 +115,10 @@ export function useRandomAlbum() {
 }
 
 const EMPTY_LIBRARY_MESSAGE =
-  "The Library has no saved albums. Save some on Spotify and try again.";
+  "The library has no saved albums. Save some on Spotify and try again.";
 
 const NO_MATCHING_TYPES_MESSAGE =
-  "Nothing in the Library matches these types. Turn on another type or try again.";
+  "Nothing in the library matches these types. Turn on another type or try again.";
 
 function getLibraryError(error: unknown): string | null {
   if (error instanceof LibraryLoadError) {

@@ -52,12 +52,12 @@ describe("RandomAlbumStage", () => {
   test("empty Library message stays on the stage with Start", () => {
     stage = idleStage({
       errorMessage:
-        "The Library has no saved albums. Save some on Spotify and try again.",
+        "The library has no saved albums. Save some on Spotify and try again.",
     });
     render(<RandomAlbumStage />);
 
     expect(screen.getByRole("alert").textContent).toBe(
-      "The Library has no saved albums. Save some on Spotify and try again.",
+      "The library has no saved albums. Save some on Spotify and try again.",
     );
     expect(screen.getByRole("button", { name: "Start" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Re-shuffle" })).toBeNull();
@@ -69,12 +69,12 @@ describe("RandomAlbumStage", () => {
   test("no-match message stays on the stage with Start", () => {
     stage = idleStage({
       errorMessage:
-        "Nothing in the Library matches these types. Turn on another type or try again.",
+        "Nothing in the library matches these types. Turn on another type or try again.",
     });
     render(<RandomAlbumStage />);
 
     expect(screen.getByRole("alert").textContent).toBe(
-      "Nothing in the Library matches these types. Turn on another type or try again.",
+      "Nothing in the library matches these types. Turn on another type or try again.",
     );
     expect(screen.getByRole("button", { name: "Start" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Re-shuffle" })).toBeNull();
@@ -115,7 +115,7 @@ describe("RandomAlbumStage", () => {
     render(<RandomAlbumStage />);
 
     expect(screen.getByRole("progressbar")).toBeTruthy();
-    expect(screen.getByText("Loading Library: 20 out of 100…")).toBeTruthy();
+    expect(screen.getByText("Loading library: 20 out of 100…")).toBeTruthy();
   });
 });
 

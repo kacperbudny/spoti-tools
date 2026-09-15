@@ -4,6 +4,8 @@ A toolbox that acts as a signed-in Spotify user. Visitors see a public Landing. 
 
 ## Language
 
+In user-facing copy (labels in sentences, errors, descriptions), write domain terms such as album and library in lowercase mid-sentence. They are ordinary English words to the User. Capitalize them only at sentence starts, in Tool names (Random album), or in this glossary.
+
 **Visitor**:
 A person looking at the site who has not completed Sign-in.
 _Avoid_: Guest, anonymous user

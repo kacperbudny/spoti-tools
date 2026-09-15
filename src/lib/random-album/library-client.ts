@@ -23,7 +23,7 @@ export async function fetchSpotifyLibrary(
     response = await http.get("/api/library");
   } catch (error) {
     if (error instanceof HTTPError) {
-      throw new LibraryLoadError("Could not load the Library. Try again.");
+      throw new LibraryLoadError("Could not load the library. Try again.");
     }
 
     throw error;

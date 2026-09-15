@@ -30,8 +30,14 @@ describe("DashboardCatalog", () => {
 
     expect(
       screen.getByRole("link", {
-        name: /A random Album from your saved Library\./,
+        name: /A random album from your saved library\./,
       }),
     ).toBeTruthy();
+  });
+
+  test("labels the catalog Tools", () => {
+    render(<DashboardCatalog />);
+
+    expect(screen.getByRole("heading", { name: "Tools" })).toBeTruthy();
   });
 });
