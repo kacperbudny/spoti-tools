@@ -1,16 +1,5 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, render, screen, within } from "@testing-library/react";
-import type { ReactNode } from "react";
-
-mock.module("next/link", () => ({
-  default({ href, children, ...props }: { href: string; children: ReactNode }) {
-    return (
-      <a href={href} {...props}>
-        {children}
-      </a>
-    );
-  },
-}));
 
 mock.module("@/lib/auth/actions", () => ({
   signOut: async () => {},
