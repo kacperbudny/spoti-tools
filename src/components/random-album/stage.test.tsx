@@ -107,7 +107,26 @@ describe("RandomAlbumStage", () => {
     expect(handleDraw).toHaveBeenCalledTimes(2);
   });
 
-  test("Library crawl shows a progress bar and the count", () => {
+  test("Library crawl pulses in a live region until the first count", () => {
+    stage = idleStage({
+      isLoading: true,
+    });
+    render(<RandomAlbumStage />);
+
+    const status = screen.getByText("Loading library…");
+    expect(status.getAttribute("aria-live")).toBe("polite");
+    expect(
+      (screen.getByRole("button", { name: "Start" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+    expect(screen.queryByRole("progressbar")).toBeNull();
+    expect(
+      screen.queryByRole("link", { name: "Listen on Spotify" }),
+    ).toBeNull();
+    expect(screen.queryByRole("img")).toBeNull();
+  });
+
+  test("Library crawl shows a progress bar and the count in a live region", () => {
     stage = idleStage({
       isLoading: true,
       progress: { loaded: 20, total: 100 },
@@ -115,7 +134,16 @@ describe("RandomAlbumStage", () => {
     render(<RandomAlbumStage />);
 
     expect(screen.getByRole("progressbar")).toBeTruthy();
-    expect(screen.getByText("Loading library: 20 out of 100…")).toBeTruthy();
+    const count = screen.getByText("Loading library: 20 out of 100…");
+    expect(count.getAttribute("aria-live")).toBe("polite");
+    expect(
+      (screen.getByRole("button", { name: "Start" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+    expect(
+      screen.queryByRole("link", { name: "Listen on Spotify" }),
+    ).toBeNull();
+    expect(screen.queryByRole("img")).toBeNull();
   });
 });
 
