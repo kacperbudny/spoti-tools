@@ -10,13 +10,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function Loading() {
   return (
     <div className="flex w-full max-w-2xl flex-col gap-8 md:max-w-3xl">
-      <h1 className="font-heading text-3xl font-medium tracking-tight md:text-4xl">
-        <Skeleton className="inline-block h-[1em] w-[16ch] align-middle" />
-      </h1>
-      <section className="flex w-full flex-col gap-3">
-        <h2 className="text-lg font-medium">
-          <Skeleton className="inline-block h-[1em] w-[5ch] align-middle" />
-        </h2>
+      <Skeleton className="h-9 w-[16ch] md:h-10" />
+      <div className="flex w-full flex-col gap-3">
+        <Skeleton className="h-7 w-[5ch]" />
         <ul className="flex flex-col gap-4">
           {TOOLS.map(({ href }) => (
             <li key={href}>
@@ -37,7 +33,7 @@ export default function Loading() {
             </li>
           ))}
         </ul>
-      </section>
+      </div>
     </div>
   );
 }
