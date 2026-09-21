@@ -1,9 +1,8 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, render, screen } from "@testing-library/react";
+import { mockInstallAffordance } from "@/test/mock-install-affordance";
 
-mock.module("@/lib/install/install-action", () => ({
-  resolveInstallAction: () => "native-prompt",
-}));
+mockInstallAffordance();
 
 const { InstallSection } = await import("@/components/app/install-section");
 

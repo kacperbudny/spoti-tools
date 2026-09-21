@@ -1,13 +1,12 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, render, screen, within } from "@testing-library/react";
+import { mockInstallAffordance } from "@/test/mock-install-affordance";
 
 mock.module("@/lib/auth/actions", () => ({
   signOut: async () => {},
 }));
 
-mock.module("@/lib/install/install-action", () => ({
-  resolveInstallAction: () => "native-prompt",
-}));
+mockInstallAffordance();
 
 let pathname = "/app";
 
