@@ -65,7 +65,10 @@ export function RandomAlbumStage() {
 
       {isLoading ? (
         <div className="flex w-full flex-col gap-2">
-          <p aria-live="polite" className="text-sm text-muted-foreground">
+          <p
+            aria-live="polite"
+            className="animate-pulse text-sm text-muted-foreground"
+          >
             {progress
               ? `Loading library: ${progress.loaded} out of ${progress.total}…`
               : "Loading library…"}

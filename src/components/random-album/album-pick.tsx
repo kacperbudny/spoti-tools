@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Album } from "@/lib/random-album/album";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +32,9 @@ function AlbumCover({ src, alt }: { src: string; alt: string }) {
 
   return (
     <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-muted">
+      {coverSettled ? null : (
+        <Skeleton className="absolute inset-0 rounded-2xl" />
+      )}
       {/* biome-ignore lint/performance/noImgElement: Spotify cover URLs are external and dynamic. */}
       <img
         src={src}
