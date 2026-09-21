@@ -36,7 +36,7 @@ export function RandomAlbumStage() {
           className="grid w-full grid-cols-3 gap-2 md:flex md:w-auto md:flex-wrap"
           disabled={isLoading}
         >
-          <legend className="sr-only">Album type</legend>
+          <legend className="sr-only">album type</legend>
           {ALBUM_TYPES.map((type) => (
             <div
               key={type}
@@ -68,7 +68,7 @@ export function RandomAlbumStage() {
           className="w-full flex-col gap-2"
         >
           <p aria-live="polite" className="text-sm text-muted-foreground">
-            Loading Library: {progress.loaded} out of {progress.total}…
+            Loading library: {progress.loaded} out of {progress.total}…
           </p>
         </Progress>
       ) : null}

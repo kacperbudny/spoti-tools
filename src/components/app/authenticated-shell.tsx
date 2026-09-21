@@ -1,21 +1,11 @@
 "use client";
 
-import {
-  ArrowLeft,
-  Disc3,
-  LayoutDashboard,
-  LogOut,
-  Waves,
-  Wrench,
-} from "lucide-react";
+import { ArrowLeft, LayoutDashboard, LogOut, Waves } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { InstallNavFooter } from "@/components/app/install-section";
-import {
-  DASHBOARD_HREF,
-  TOOL_DESTINATIONS,
-} from "@/components/app/tool-destinations";
+import { DASHBOARD_HREF, TOOLS } from "@/components/app/tools";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { signOut } from "@/lib/auth/actions";
 import { cn } from "@/lib/utils";
@@ -63,12 +53,12 @@ export function AuthenticatedShell({
               Tools
             </p>
             <ul className="flex flex-col gap-1">
-              {TOOL_DESTINATIONS.map((tool) => (
+              {TOOLS.map((tool) => (
                 <li key={tool.href}>
                   <NavLink
                     href={tool.href}
                     pathname={pathname}
-                    icon={TOOL_ICONS[tool.href] ?? Wrench}
+                    icon={tool.icon}
                   >
                     {tool.name}
                   </NavLink>
@@ -94,10 +84,6 @@ export function AuthenticatedShell({
 }
 
 type IconComponent = typeof LayoutDashboard;
-
-const TOOL_ICONS: Record<string, IconComponent> = {
-  "/app/random-album": Disc3,
-};
 
 function isCurrentPath(pathname: string, href: string) {
   return pathname === href || pathname === `${href}/`;

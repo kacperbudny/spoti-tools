@@ -1,26 +1,18 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Dashboard } from "@/components/app/dashboard";
 import { InstallSection } from "@/components/app/install-section";
-import { TOOL_DESTINATIONS } from "@/components/app/tool-destinations";
+import { getSession } from "@/lib/auth/session";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const session = await getSession();
+
+  if (!session) {
+    redirect("/");
+  }
+
   return (
-    <>
-      <section className="flex w-full max-w-lg flex-col gap-3">
-        <h1 className="text-lg font-medium">Tools</h1>
-        <ul className="divide-y divide-border rounded-2xl border border-border">
-          {TOOL_DESTINATIONS.map((tool) => (
-            <li key={tool.href}>
-              <Link
-                href={tool.href}
-                className="block px-4 py-3 transition-colors hover:bg-muted"
-              >
-                {tool.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
+    <Dashboard displayName={session.user.name}>
       <InstallSection />
-    </>
+    </Dashboard>
   );
 }
