@@ -5,6 +5,7 @@ import { AlbumPick } from "@/components/random-album/album-pick";
 import { useRandomAlbum } from "@/components/random-album/use-random-album";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { ALBUM_TYPE_LABELS, ALBUM_TYPES } from "@/lib/random-album/album-types";
 import { cn } from "@/lib/utils";
@@ -62,15 +63,22 @@ export function RandomAlbumStage() {
         </fieldset>
       </header>
 
-      {isLoading && progress ? (
-        <Progress
-          value={libraryLoadPercent(progress)}
-          className="w-full flex-col gap-2"
-        >
-          <p aria-live="polite" className="text-sm text-muted-foreground">
-            Loading library: {progress.loaded} out of {progress.total}…
+      {isLoading ? (
+        <div className="flex w-full flex-col gap-2">
+          <p
+            aria-live="polite"
+            className="animate-pulse text-sm text-muted-foreground"
+          >
+            {progress
+              ? `Loading library: ${progress.loaded} out of ${progress.total}…`
+              : "Loading library…"}
           </p>
-        </Progress>
+          {progress ? (
+            <Progress value={libraryLoadPercent(progress)} className="w-full" />
+          ) : (
+            <Skeleton className="h-2 w-full" />
+          )}
+        </div>
       ) : null}
 
       {errorMessage ? (

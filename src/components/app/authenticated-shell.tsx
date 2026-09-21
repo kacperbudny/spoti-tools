@@ -24,18 +24,18 @@ export function AuthenticatedShell({
   const pathname = usePathname();
 
   return (
-    <div className="flex flex-1">
+    <div className="flex h-svh min-h-0 overflow-hidden">
       <nav
         aria-label="Primary"
-        className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex"
+        className="hidden h-full w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex"
       >
-        <div className="px-5 pt-6 pb-5">
+        <div className="shrink-0 px-5 pt-6 pb-5">
           <BrandLockup />
         </div>
 
         <div className="h-px shrink-0 bg-sidebar-border" />
 
-        <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-3 py-5">
+        <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-3 py-5">
           <ul className="flex flex-col gap-1">
             <li>
               <NavLink
@@ -68,14 +68,14 @@ export function AuthenticatedShell({
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 border-t border-sidebar-border p-3">
+        <div className="flex shrink-0 flex-col gap-3 border-t border-sidebar-border p-3">
           <InstallNavFooter />
           <UserChip displayName={displayName} email={email} />
         </div>
       </nav>
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <MobileTopBar displayName={displayName} pathname={pathname} />
-        <main className="flex flex-1 flex-col items-center gap-8 p-8">
+        <main className="flex min-h-0 flex-1 flex-col items-center gap-8 overflow-y-auto p-8">
           {children}
         </main>
       </div>
