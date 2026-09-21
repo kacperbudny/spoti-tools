@@ -11,8 +11,7 @@ export function Dashboard({
   return (
     <div className="flex w-full max-w-2xl flex-col gap-8 md:max-w-3xl">
       <h1 className="font-heading text-3xl font-medium tracking-tight md:text-4xl">
-        Hello,{" "}
-        <span className="text-cta">{displayName}</span>
+        Hello, <span className="text-cta">{displayName}</span>
         {"!"}
       </h1>
       <DashboardCatalog />

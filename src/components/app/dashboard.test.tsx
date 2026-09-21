@@ -8,6 +8,8 @@ describe("Dashboard", () => {
   test("greets the User by display name", () => {
     render(<Dashboard displayName="Ada" />);
 
-    expect(screen.getByRole("heading", { name: /Hello, Ada\s*!/ })).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: /Hello, Ada\s*!/ }),
+    ).toBeTruthy();
   });
 });
