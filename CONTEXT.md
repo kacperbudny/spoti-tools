@@ -4,6 +4,8 @@ A toolbox that acts as a signed-in Spotify user. Visitors see a public Landing. 
 
 ## Language
 
+In user-facing copy (labels in sentences, errors, descriptions), write domain terms such as album and library in lowercase mid-sentence. They are ordinary English words to the User. Capitalize them only at sentence starts, in Tool names (Random album), or in this glossary.
+
 **Visitor**:
 A person looking at the site who has not completed Sign-in.
 _Avoid_: Guest, anonymous user
@@ -61,7 +63,7 @@ Ending this browser's Session only. Other Sessions stay signed in. It does not r
 _Avoid_: Disconnect, unlink, revoke
 
 **Install**:
-Adding SpotiTools to a device's home screen or app launcher so it opens in its own window. Only Users see the affordance, on the Dashboard. Visitors never see it.
+Adding SpotiTools to a device's home screen or app launcher so it opens in its own window. Only Users see the affordance: on the Dashboard, and on desktop also in the signed-in nav footer. Visitors never see it. Tool pages do not show it.
 _Avoid_: Add to Home Screen (as the domain act; platform UI may say that on iOS), PWA
 
 **Installed**:

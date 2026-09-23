@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { UserChrome } from "@/components/app/user-chrome";
+import { AuthenticatedShell } from "@/components/app/authenticated-shell";
 import { getSession } from "@/lib/auth/session";
 
 export default async function DashboardLayout({
@@ -12,9 +12,11 @@ export default async function DashboardLayout({
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center gap-8 p-8">
-      <UserChrome user={session.user} />
+    <AuthenticatedShell
+      displayName={session.user.name}
+      email={session.user.email}
+    >
       {children}
-    </main>
+    </AuthenticatedShell>
   );
 }

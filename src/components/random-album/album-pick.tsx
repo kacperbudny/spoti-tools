@@ -1,13 +1,6 @@
-import { buttonVariants } from "@/components/ui/button";
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Album } from "@/lib/random-album/album";
-import { ALBUM_TYPE_LABELS } from "@/lib/random-album/album-types";
 import { cn } from "@/lib/utils";
 
 type AlbumPickProps = {
@@ -15,35 +8,44 @@ type AlbumPickProps = {
 };
 
 export function AlbumPick({ album }: AlbumPickProps) {
-  const metadata = [album.year, ALBUM_TYPE_LABELS[album.type]]
-    .filter(Boolean)
-    .join(" · ");
-
   return (
-    <Card className="w-full max-w-xs">
+    <div className="flex flex-col gap-4">
       {album.coverUrl ? (
-        // biome-ignore lint/performance/noImgElement: Spotify cover URLs are external and dynamic.
-        <img
+        <AlbumCover
+          key={album.coverUrl}
           src={album.coverUrl}
           alt={`${album.title} cover art`}
-          className="aspect-square w-full object-cover"
         />
       ) : null}
-      <CardHeader>
-        <CardTitle className="text-xl">{album.title}</CardTitle>
-        <CardDescription>{album.artists.join(", ")}</CardDescription>
-        {metadata ? <CardDescription>{metadata}</CardDescription> : null}
-      </CardHeader>
-      <CardFooter>
-        <a
-          href={album.listenUrl}
-          target="_blank"
-          rel="noreferrer"
-          className={cn(buttonVariants(), "w-full")}
-        >
-          Listen on Spotify
-        </a>
-      </CardFooter>
-    </Card>
+      <div className="flex flex-col gap-1">
+        <h2 className="font-heading text-2xl font-medium tracking-tight">
+          {album.title}
+        </h2>
+        <p className="text-muted-foreground">{album.artists.join(", ")}</p>
+      </div>
+    </div>
+  );
+}
+
+function AlbumCover({ src, alt }: { src: string; alt: string }) {
+  const [coverSettled, setCoverSettled] = useState(false);
+
+  return (
+    <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-muted">
+      {coverSettled ? null : (
+        <Skeleton className="absolute inset-0 rounded-2xl" />
+      )}
+      {/* biome-ignore lint/performance/noImgElement: Spotify cover URLs are external and dynamic. */}
+      <img
+        src={src}
+        alt={alt}
+        onLoad={() => setCoverSettled(true)}
+        onError={() => setCoverSettled(true)}
+        className={cn(
+          "size-full object-cover transition-opacity duration-500",
+          coverSettled ? "opacity-100" : "opacity-0",
+        )}
+      />
+    </div>
   );
 }

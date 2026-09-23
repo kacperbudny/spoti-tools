@@ -1,18 +1,5 @@
-import Link from "next/link";
-import { RandomAlbumIdleForm } from "@/components/random-album/idle-form";
+import { RandomAlbumStage } from "@/components/random-album/stage";
 
 export default function RandomAlbumPage() {
-  return (
-    <>
-      <nav className="w-full max-w-lg">
-        <Link
-          href="/app"
-          className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Back to Dashboard
-        </Link>
-      </nav>
-      <RandomAlbumIdleForm />
-    </>
-  );
+  return <RandomAlbumStage />;
 }
