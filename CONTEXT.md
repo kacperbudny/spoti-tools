@@ -31,12 +31,36 @@ The albums a User has saved as albums on Spotify. It is not Liked Songs, playlis
 _Avoid_: Collection, catalog, Your Library
 
 **Album**:
-A saved release in the Library. Every Library item is an Album. Its type is album, single, or compilation.
-_Avoid_: Record, release (as the name of this object)
+A Release the User has saved in the Library. Every Library item is an Album.
+_Avoid_: Record
+
+**Release**:
+A title in an artist's Discography. It is not an Album until the User saves it in the Library.
+_Avoid_: Record
 
 **Album type**:
-How an Album is filed: album, single, or compilation. album means a full-length release. There is no EP type; Spotify files those as album or single. In the Random album UI, the single toggle is labeled Single/EP to match Spotify.
+How a Release is filed: album, single, or compilation. An Album has the Album type of the Release the User saved. album means a full-length release. There is no EP type; Spotify files those as album or single. The single checkbox is labeled Single/EP.
 _Avoid_: EP, LP (as separate toggle labels; Single/EP is the UI label for single)
+
+**Discography**:
+The Releases Spotify lists for an artist. It is not the Library.
+_Avoid_: Catalog, all songs
+
+**Appearances**:
+Releases in a Discography that are someone else's, where this artist is credited on a Track. The checkbox is labeled Appearances.
+_Avoid_: Features, appears on, guest spots
+
+**Track**:
+A recording on a Release. The same recording on another Release is the same Track.
+_Avoid_: Song
+
+**Artist playlist**:
+The Tool at `/app/artist-playlist`. It saves one artist's Discography into one private playlist on Spotify, and remembers that playlist for the User and that artist.
+_Avoid_: Discography tool, song saver
+
+**Rewrite**:
+Replacing the Tracks in the playlist Artist playlist already created for that artist, after the User confirms.
+_Avoid_: Update, sync, refresh
 
 **Random album**:
 The Tool at `/app/random-album`. Opening the page does not load the Library or produce a Pick; the User does that from the Tool. The first-time button is labeled Start — that is UI copy, not a domain act. An empty Library crawls Spotify again on the next attempt (the User may have saved albums). If the Library is loaded and nothing matches the selected types, the next draw uses that Library; it does not crawl again.
