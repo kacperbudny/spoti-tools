@@ -36,6 +36,17 @@ describe("AuthenticatedShell", () => {
     ).toBe("/app/random-album");
   });
 
+  test("desktop nav lists Artist playlist", () => {
+    pathname = "/app";
+    render(<AuthenticatedShell displayName="Ada" email="ada@example.com" />);
+
+    expect(
+      within(screen.getByRole("navigation"))
+        .getByRole("link", { name: "Artist playlist" })
+        .getAttribute("href"),
+    ).toBe("/app/artist-playlist");
+  });
+
   test("desktop nav includes Sign-out", () => {
     pathname = "/app";
     render(<AuthenticatedShell displayName="Ada" email="ada@example.com" />);
@@ -56,6 +67,22 @@ describe("AuthenticatedShell", () => {
     expect(
       within(topBar).getByRole("button", { name: "Sign-out" }),
     ).toBeTruthy();
+  });
+
+  test("phone Artist playlist top bar is Back to Dashboard only", () => {
+    pathname = "/app/artist-playlist";
+    render(<AuthenticatedShell displayName="Ada" email="ada@example.com" />);
+
+    const topBar = screen.getByRole("banner");
+    expect(
+      within(topBar)
+        .getByRole("link", { name: "Back to Dashboard" })
+        .getAttribute("href"),
+    ).toBe("/app");
+    expect(
+      within(topBar).queryByRole("button", { name: "Sign-out" }),
+    ).toBeNull();
+    expect(within(topBar).queryByText("Ada")).toBeNull();
   });
 
   test("phone Tool top bar is Back to Dashboard only", () => {
