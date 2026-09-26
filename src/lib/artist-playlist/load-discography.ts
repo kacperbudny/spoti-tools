@@ -12,7 +12,8 @@ import type {
   SpotifyArtistAlbum,
 } from "@/lib/spotify/types";
 
-const PAGE_SIZE = 50;
+const ARTIST_ALBUMS_PAGE_SIZE = 10;
+const ALBUM_TRACKS_PAGE_SIZE = 50;
 const RECORDING_BATCH = 50;
 const REQUEST_CONCURRENCY = 4;
 
@@ -56,7 +57,7 @@ async function listArtistAlbums(
       artistId,
       includeGroups,
       offset,
-      PAGE_SIZE,
+      ARTIST_ALBUMS_PAGE_SIZE,
     );
     albums.push(...page.items);
 
@@ -76,7 +77,11 @@ async function listAlbumTracks(
   let offset = 0;
 
   while (true) {
-    const page = await client.getAlbumTracksPage(albumId, offset, PAGE_SIZE);
+    const page = await client.getAlbumTracksPage(
+      albumId,
+      offset,
+      ALBUM_TRACKS_PAGE_SIZE,
+    );
     tracks.push(...page.items);
 
     if (page.next === null || page.items.length === 0) {

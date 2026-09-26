@@ -61,7 +61,7 @@ export class SpotifyClient {
     artistId: string,
     includeGroups: readonly SpotifyAlbumGroup[],
     offset: number,
-    limit = 50,
+    limit = 10,
   ): Promise<SpotifyArtistAlbumsPage> {
     const url = new URL(`${SPOTIFY_API_BASE}/artists/${artistId}/albums`);
     url.searchParams.set("include_groups", includeGroups.join(","));
