@@ -20,6 +20,6 @@ const body: unknown = await http.get(url).json();
 return savedAlbumsPageSchema.parse(body);
 ```
 
-On parse failure, map to that boundary's domain error (e.g. `SpotifyUnavailableError`, `LibraryLoadError`). Do not surface `ZodError` in the UI.
+On parse failure, map to that boundary's domain error (e.g. `SpotifyClientError`, `LibraryLoadError`). Do not surface `ZodError` in the UI.
 
 Keep the schema next to the boundary it protects: vendor HTTP under `src/lib/<vendor>/`, app HTTP contracts next to the feature that owns the route.

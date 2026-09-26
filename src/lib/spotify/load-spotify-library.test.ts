@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, mock, spyOn, test } from "bun:test";
 import { SessionDeadError } from "@/lib/auth/errors";
-import { SpotifyClient, SpotifyUnavailableError } from "@/lib/spotify/client";
+import { SpotifyClient, SpotifyClientError } from "@/lib/spotify/client";
 import { loadSpotifyLibrary } from "@/lib/spotify/load-spotify-library";
 import type {
   SpotifySavedAlbumItem,
@@ -38,7 +38,7 @@ function fakePages(
   pages: Record<number, SpotifySavedAlbumsPage | Error>,
 ): SpotifyClient["getSavedAlbumsPage"] {
   return async (offset) => {
-    const page = pages[offset] ?? new SpotifyUnavailableError();
+    const page = pages[offset] ?? new SpotifyClientError();
     if (page instanceof Error) {
       throw page;
     }
@@ -100,7 +100,7 @@ describe("loadSpotifyLibrary", () => {
     expect(library).toEqual([]);
   });
 
-  test("throws SpotifyUnavailableError when a page fetch fails", async () => {
+  test("throws SpotifyClientError when a page fetch fails", async () => {
     spyOn(SpotifyClient.prototype, "getSavedAlbumsPage").mockImplementation(
       fakePages({
         0: savedAlbumsPage({
@@ -108,13 +108,13 @@ describe("loadSpotifyLibrary", () => {
           next: "https://api.spotify.com/v1/me/albums?offset=1",
           items: [savedAlbum("1")],
         }),
-        1: new SpotifyUnavailableError(),
+        1: new SpotifyClientError(),
       }),
     );
 
     await expect(
       loadSpotifyLibrary(new SpotifyClient("token"), () => {}),
-    ).rejects.toBeInstanceOf(SpotifyUnavailableError);
+    ).rejects.toBeInstanceOf(SpotifyClientError);
   });
 
   test("throws SessionDeadError when Spotify reports it", async () => {
