@@ -58,6 +58,22 @@ describe("AuthenticatedShell", () => {
     ).toBeTruthy();
   });
 
+  test("phone Artist playlist top bar is Back to Dashboard only", () => {
+    pathname = "/app/artist-playlist";
+    render(<AuthenticatedShell displayName="Ada" email="ada@example.com" />);
+
+    const topBar = screen.getByRole("banner");
+    expect(
+      within(topBar)
+        .getByRole("link", { name: "Back to Dashboard" })
+        .getAttribute("href"),
+    ).toBe("/app");
+    expect(
+      within(topBar).queryByRole("button", { name: "Sign-out" }),
+    ).toBeNull();
+    expect(within(topBar).queryByText("Ada")).toBeNull();
+  });
+
   test("phone Tool top bar is Back to Dashboard only", () => {
     pathname = "/app/random-album";
     render(<AuthenticatedShell displayName="Ada" email="ada@example.com" />);
