@@ -4,7 +4,8 @@ import { ListMusic } from "lucide-react";
 import type { FormEvent } from "react";
 import { useArtistPick } from "@/components/artist-playlist/use-artist-pick";
 import { useArtistSearch } from "@/components/artist-playlist/use-artist-search";
-import { Button } from "@/components/ui/button";
+import { useSavePlaylist } from "@/components/artist-playlist/use-save-playlist";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import type { Artist } from "@/lib/artist-playlist/artist";
@@ -14,6 +15,7 @@ import {
   type ReleaseGroup,
   type ReleaseGroupSelection,
 } from "@/lib/artist-playlist/release-groups";
+import type { SavePlaylistResponse } from "@/lib/artist-playlist/save-playlist-response";
 import { cn } from "@/lib/utils";
 
 export function ArtistPlaylistStage() {
@@ -84,7 +86,43 @@ function ArtistPlaylistConfigureStep({
         <ChangeArtistButton onClick={onChangeArtist} />
       </div>
       <ReleaseGroupFieldset selection={selection} onToggle={onToggle} />
-      <SavePlaylistButton disabled={!canSave} />
+      <SavePlaylistForm
+        artist={artist}
+        selection={selection}
+        canSave={canSave}
+      />
+    </>
+  );
+}
+
+function SavePlaylistForm({
+  artist,
+  selection,
+  canSave,
+}: {
+  artist: Artist;
+  selection: ReleaseGroupSelection;
+  canSave: boolean;
+}) {
+  const save = useSavePlaylist(selection);
+
+  return (
+    <>
+      <SavePlaylistButton
+        disabled={!canSave || save.isSaving}
+        pending={save.isSaving}
+        onSave={() =>
+          save.save({
+            artistId: artist.id,
+            artistName: artist.name,
+            selection,
+          })
+        }
+      />
+      <SavePlaylistOutcome
+        result={save.result}
+        errorMessage={save.errorMessage}
+      />
     </>
   );
 }
@@ -251,11 +289,65 @@ function ReleaseGroupFieldset({
   );
 }
 
-function SavePlaylistButton({ disabled }: { disabled: boolean }) {
+function SavePlaylistButton({
+  disabled,
+  pending,
+  onSave,
+}: {
+  disabled: boolean;
+  pending: boolean;
+  onSave: () => void;
+}) {
   return (
-    <Button type="button" size="lg" className="h-12 w-full" disabled={disabled}>
-      Save
+    <Button
+      type="button"
+      size="lg"
+      className="h-12 w-full"
+      disabled={disabled}
+      onClick={onSave}
+    >
+      {pending ? "Saving…" : "Save"}
     </Button>
+  );
+}
+
+function SavePlaylistOutcome({
+  result,
+  errorMessage,
+}: {
+  result: SavePlaylistResponse | null;
+  errorMessage: string | null;
+}) {
+  const playlistUrl = result && result.kind !== "nothing" ? result.url : null;
+
+  return (
+    <>
+      {errorMessage ? (
+        <p role="alert" className="text-sm text-destructive">
+          {errorMessage}
+        </p>
+      ) : null}
+      {result?.kind === "nothing" ? (
+        <output className="block text-sm text-muted-foreground">
+          There is nothing to save.
+        </output>
+      ) : null}
+      {result?.kind === "created" && result.truncated ? (
+        <output className="block text-sm text-muted-foreground">
+          The oldest 10,000 tracks were saved. The rest did not fit.
+        </output>
+      ) : null}
+      {playlistUrl ? (
+        <a
+          href={playlistUrl}
+          target="_blank"
+          rel="noreferrer"
+          className={cn(buttonVariants({ size: "lg" }), "h-12 w-full")}
+        >
+          Open playlist on Spotify
+        </a>
+      ) : null}
+    </>
   );
 }
 
