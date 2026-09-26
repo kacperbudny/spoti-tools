@@ -1,7 +1,7 @@
 import * as z from "zod";
 import { SessionDeadError } from "@/lib/auth/errors";
 import { getSpotifyAccessToken } from "@/lib/auth/session";
-import { SpotifyClient, SpotifyUnavailableError } from "@/lib/spotify/client";
+import { SpotifyClient, SpotifyClientError } from "@/lib/spotify/client";
 
 const artistSearchQuerySchema = z.object({
   q: z.string().trim().min(1),
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       return new Response(null, { status: 401 });
     }
 
-    if (error instanceof SpotifyUnavailableError) {
+    if (error instanceof SpotifyClientError) {
       return Response.json(
         { message: "Spotify failed. Try again." },
         { status: 502 },

@@ -1,4 +1,5 @@
 import { HTTPError } from "ky";
+import type * as z from "zod";
 import type { Artist } from "@/lib/artist-playlist/artist";
 import { SessionDeadError } from "@/lib/auth/errors";
 import { http } from "@/lib/http/ky";
@@ -12,10 +13,10 @@ import {
 const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
 const ARTIST_SEARCH_LIMIT = 10;
 
-export class SpotifyUnavailableError extends Error {
+export class SpotifyClientError extends Error {
   constructor() {
-    super("Spotify unavailable");
-    this.name = "SpotifyUnavailableError";
+    super("Spotify client error");
+    this.name = "SpotifyClientError";
   }
 }
 
@@ -31,7 +32,7 @@ export class SpotifyClient {
     url.searchParams.set("offset", String(offset));
 
     const body = await this.callSpotify(url);
-    return spotifySavedAlbumsPageSchema.parse(body);
+    return this.parseSpotify(spotifySavedAlbumsPageSchema, body);
   }
 
   async searchArtists(query: string): Promise<Artist[]> {
@@ -41,7 +42,9 @@ export class SpotifyClient {
     url.searchParams.set("limit", String(ARTIST_SEARCH_LIMIT));
 
     const body = await this.callSpotify(url);
-    return mapSpotifyArtistSearch(spotifyArtistSearchSchema.parse(body));
+    return mapSpotifyArtistSearch(
+      this.parseSpotify(spotifyArtistSearchSchema, body),
+    );
   }
 
   private async callSpotify(url: URL): Promise<unknown> {
@@ -62,7 +65,23 @@ export class SpotifyClient {
         }
       }
 
-      throw new SpotifyUnavailableError();
+      throw this.handleError(error);
     }
+  }
+
+  private parseSpotify<T extends z.ZodType>(
+    schema: T,
+    body: unknown,
+  ): z.infer<T> {
+    try {
+      return schema.parse(body);
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  private handleError(error: unknown): SpotifyClientError {
+    console.error(error instanceof Error ? error.message : String(error));
+    return new SpotifyClientError();
   }
 }
