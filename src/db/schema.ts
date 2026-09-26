@@ -3,6 +3,7 @@ import {
   boolean,
   index,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -85,6 +86,19 @@ export const verification = pgTable(
       .notNull(),
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
+);
+
+export const artistPlaylist = pgTable(
+  "artist_playlist",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    artistId: text("artist_id").notNull(),
+    playlistId: text("playlist_id").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.artistId] })],
 );
 
 export const authRelations = defineRelations(
