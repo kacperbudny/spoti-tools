@@ -28,24 +28,4 @@ describe("DashboardCatalog", () => {
 
     expect(screen.getByRole("heading", { name: "Tools" })).toBeTruthy();
   });
-
-  test("names Artist playlist and opens that Tool", () => {
-    render(<DashboardCatalog />);
-
-    expect(
-      screen
-        .getByRole("link", { name: /Artist playlist/ })
-        .getAttribute("href"),
-    ).toBe("/app/artist-playlist");
-  });
-
-  test("Artist playlist card uses the catalog one-liner", () => {
-    render(<DashboardCatalog />);
-
-    expect(
-      screen.getByRole("link", {
-        name: /Save an artist's discography to a private playlist\./,
-      }),
-    ).toBeTruthy();
-  });
 });

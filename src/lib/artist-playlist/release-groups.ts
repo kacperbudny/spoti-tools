@@ -30,7 +30,7 @@ export function toggleReleaseGroup(
   return { ...selection, [group]: !selection[group] };
 }
 
-export function hasSelectedReleaseGroup(
+export function hasAnyReleaseGroupSelected(
   selection: ReleaseGroupSelection,
 ): boolean {
   return RELEASE_GROUPS.some((group) => selection[group]);

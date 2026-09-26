@@ -30,8 +30,8 @@ export class SpotifyClient {
     url.searchParams.set("limit", String(limit));
     url.searchParams.set("offset", String(offset));
 
-    const body = await readSpotifyJson(url, this.accessToken);
-    return parseSpotify(spotifySavedAlbumsPageSchema, body);
+    const body = await this.callSpotify(url);
+    return spotifySavedAlbumsPageSchema.parse(body);
   }
 
   async searchArtists(query: string): Promise<Artist[]> {
@@ -40,45 +40,29 @@ export class SpotifyClient {
     url.searchParams.set("type", "artist");
     url.searchParams.set("limit", String(ARTIST_SEARCH_LIMIT));
 
-    const body = await readSpotifyJson(url, this.accessToken);
-    return mapSpotifyArtistSearch(
-      parseSpotify(spotifyArtistSearchSchema, body),
-    );
+    const body = await this.callSpotify(url);
+    return mapSpotifyArtistSearch(spotifyArtistSearchSchema.parse(body));
   }
-}
 
-async function readSpotifyJson(
-  url: URL,
-  accessToken: string,
-): Promise<unknown> {
-  try {
-    return await http
-      .get(url, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-      .json();
-  } catch (error) {
-    if (error instanceof HTTPError) {
-      const status = error.response.status;
+  private async callSpotify(url: URL): Promise<unknown> {
+    try {
+      return await http
+        .get(url, {
+          headers: {
+            Authorization: `Bearer ${this.accessToken}`,
+          },
+        })
+        .json();
+    } catch (error) {
+      if (error instanceof HTTPError) {
+        const status = error.response.status;
 
-      if (status === 401 || status === 403) {
-        throw new SessionDeadError();
+        if (status === 401 || status === 403) {
+          throw new SessionDeadError();
+        }
       }
+
+      throw new SpotifyUnavailableError();
     }
-
-    throw new SpotifyUnavailableError();
-  }
-}
-
-function parseSpotify<T>(
-  schema: { parse: (data: unknown) => T },
-  body: unknown,
-): T {
-  try {
-    return schema.parse(body);
-  } catch {
-    throw new SpotifyUnavailableError();
   }
 }

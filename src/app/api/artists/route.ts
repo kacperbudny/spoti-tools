@@ -1,7 +1,11 @@
-import { artistSearchQuerySchema } from "@/lib/artist-playlist/artist";
+import * as z from "zod";
 import { SessionDeadError } from "@/lib/auth/errors";
 import { getSpotifyAccessToken } from "@/lib/auth/session";
 import { SpotifyClient, SpotifyUnavailableError } from "@/lib/spotify/client";
+
+const artistSearchQuerySchema = z.object({
+  q: z.string().trim().min(1),
+});
 
 export async function GET(request: Request) {
   const url = new URL(request.url);

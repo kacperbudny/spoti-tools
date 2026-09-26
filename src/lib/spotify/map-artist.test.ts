@@ -42,6 +42,7 @@ describe("mapSpotifyArtistSearch", () => {
       {
         id: "ada-2",
         name: "Ada",
+        imageUrl: undefined,
       },
     ] satisfies Artist[]);
   });

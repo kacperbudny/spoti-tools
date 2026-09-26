@@ -1,11 +1,12 @@
 import { HTTPError } from "ky";
 import * as z from "zod";
-import {
-  type Artist,
-  artistSearchResponseSchema,
-} from "@/lib/artist-playlist/artist";
+import { type Artist, artistSchema } from "@/lib/artist-playlist/artist";
 import { SessionDeadError } from "@/lib/auth/errors";
 import { http } from "@/lib/http/ky";
+
+const artistSearchResponseSchema = z.object({
+  artists: z.array(artistSchema),
+});
 
 export class ArtistSearchError extends Error {
   constructor(message: string) {
@@ -17,7 +18,7 @@ export class ArtistSearchError extends Error {
 export async function searchArtists(query: string): Promise<Artist[]> {
   try {
     const body: unknown = await http
-      .get("/api/artists/search", {
+      .get("/api/artists", {
         searchParams: { q: query },
       })
       .json();

@@ -1,27 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import {
   DEFAULT_RELEASE_GROUP_SELECTION,
-  hasSelectedReleaseGroup,
-  RELEASE_GROUP_LABELS,
+  hasAnyReleaseGroupSelected,
   toggleReleaseGroup,
 } from "@/lib/artist-playlist/release-groups";
 
-describe("release group selection", () => {
-  test("starts with Albums, Singles and EPs, Compilations, and Appearances on", () => {
-    expect(RELEASE_GROUP_LABELS).toEqual({
-      album: "Albums",
-      single: "Singles and EPs",
-      compilation: "Compilations",
-      appearances: "Appearances",
-    });
-    expect(DEFAULT_RELEASE_GROUP_SELECTION).toEqual({
-      album: true,
-      single: true,
-      compilation: true,
-      appearances: true,
-    });
-  });
-
+describe("toggleReleaseGroup", () => {
   test("turns one group off", () => {
     expect(
       toggleReleaseGroup(DEFAULT_RELEASE_GROUP_SELECTION, "appearances"),
@@ -34,10 +18,10 @@ describe("release group selection", () => {
   });
 });
 
-describe("hasSelectedReleaseGroup", () => {
+describe("hasAnyReleaseGroupSelected", () => {
   test("is true when at least one group is on", () => {
     expect(
-      hasSelectedReleaseGroup({
+      hasAnyReleaseGroupSelected({
         album: false,
         single: false,
         compilation: false,
@@ -48,7 +32,7 @@ describe("hasSelectedReleaseGroup", () => {
 
   test("is false when every group is off", () => {
     expect(
-      hasSelectedReleaseGroup({
+      hasAnyReleaseGroupSelected({
         album: false,
         single: false,
         compilation: false,

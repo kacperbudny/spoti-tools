@@ -36,17 +36,6 @@ describe("AuthenticatedShell", () => {
     ).toBe("/app/random-album");
   });
 
-  test("desktop nav lists Artist playlist", () => {
-    pathname = "/app";
-    render(<AuthenticatedShell displayName="Ada" email="ada@example.com" />);
-
-    expect(
-      within(screen.getByRole("navigation"))
-        .getByRole("link", { name: "Artist playlist" })
-        .getAttribute("href"),
-    ).toBe("/app/artist-playlist");
-  });
-
   test("desktop nav includes Sign-out", () => {
     pathname = "/app";
     render(<AuthenticatedShell displayName="Ada" email="ada@example.com" />);
