@@ -1,5 +1,3 @@
-import { ALBUM_TYPE_LABELS } from "@/lib/random-album/album-types";
-
 export const RELEASE_GROUPS = [
   "album",
   "single",
@@ -12,9 +10,9 @@ export type ReleaseGroup = (typeof RELEASE_GROUPS)[number];
 export type ReleaseGroupSelection = Record<ReleaseGroup, boolean>;
 
 export const RELEASE_GROUP_LABELS: Record<ReleaseGroup, string> = {
-  album: ALBUM_TYPE_LABELS.album,
-  single: ALBUM_TYPE_LABELS.single,
-  compilation: ALBUM_TYPE_LABELS.compilation,
+  album: "Albums",
+  single: "Singles and EPs",
+  compilation: "Compilations",
   appearances: "Appearances",
 };
 

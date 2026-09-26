@@ -39,8 +39,8 @@ A title in an artist's Discography. It is not an Album until the User saves it i
 _Avoid_: Record
 
 **Album type**:
-How a Release is filed: album, single, or compilation. An Album has the Album type of the Release the User saved. album means a full-length release. There is no EP type; Spotify files those as album or single. The single checkbox is labeled Single/EP.
-_Avoid_: EP, LP (as separate toggle labels; Single/EP is the UI label for single)
+How a Release is filed: album, single, or compilation. An Album has the Album type of the Release the User saved. album means a full-length release. There is no EP type; Spotify files those as album or single. Random album labels that checkbox Single/EP.
+_Avoid_: EP, LP (as separate toggle labels on Random album; Single/EP is that tool's label for single)
 
 **Discography**:
 The Releases Spotify lists for an artist. It is not the Library.
@@ -55,7 +55,7 @@ A recording on a Release. The same recording on another Release is the same Trac
 _Avoid_: Song
 
 **Artist playlist**:
-The Tool at `/app/artist-playlist`. It saves one artist's Discography into one private playlist on Spotify, and remembers that playlist for the User and that artist.
+The Tool at `/app/artist-playlist`. It saves one artist's Discography into one private playlist on Spotify, and remembers that playlist for the User and that artist. After an artist is picked, it asks "What do you want to include in your playlist?" The checkboxes are Albums, Singles and EPs, Compilations, and Appearances.
 _Avoid_: Discography tool, song saver
 
 **Rewrite**:

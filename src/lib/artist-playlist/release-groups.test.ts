@@ -7,11 +7,11 @@ import {
 } from "@/lib/artist-playlist/release-groups";
 
 describe("release group selection", () => {
-  test("starts with Album, Single/EP, Compilation, and Appearances on", () => {
+  test("starts with Albums, Singles and EPs, Compilations, and Appearances on", () => {
     expect(RELEASE_GROUP_LABELS).toEqual({
-      album: "Album",
-      single: "Single/EP",
-      compilation: "Compilation",
+      album: "Albums",
+      single: "Singles and EPs",
+      compilation: "Compilations",
       appearances: "Appearances",
     });
     expect(DEFAULT_RELEASE_GROUP_SELECTION).toEqual({

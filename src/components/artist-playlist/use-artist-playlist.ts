@@ -70,11 +70,15 @@ export function useArtistPlaylist() {
     setPickedArtistId(artistId);
   }
 
+  function handleChangeArtist() {
+    setPickedArtistId(null);
+  }
+
   return {
     query,
     selection,
     matches,
-    pickedArtistId,
+    pickedArtist,
     canSave,
     isSearching: searchMutation.isPending,
     errorMessage: formError,
@@ -84,6 +88,7 @@ export function useArtistPlaylist() {
     handleSearch,
     handleToggle,
     handlePick,
+    handleChangeArtist,
   };
 }
 

@@ -17,7 +17,7 @@ export function ArtistPlaylistStage() {
     query,
     selection,
     matches,
-    pickedArtistId,
+    pickedArtist,
     canSave,
     isSearching,
     errorMessage,
@@ -26,6 +26,7 @@ export function ArtistPlaylistStage() {
     handleSearch,
     handleToggle,
     handlePick,
+    handleChangeArtist,
   } = useArtistPlaylist();
 
   return (
@@ -40,115 +41,154 @@ export function ArtistPlaylistStage() {
           </span>
           Artist playlist
         </h1>
-        <fieldset className="grid w-full grid-cols-2 gap-2 md:flex md:w-auto md:flex-wrap">
-          <legend className="sr-only">releases</legend>
-          {RELEASE_GROUPS.map((group) => (
-            <div
-              key={group}
-              className={cn(
-                "flex min-w-0 flex-col items-center gap-1.5 rounded-2xl px-1 py-2 text-center text-xs leading-tight md:flex-row md:items-center md:gap-2 md:px-3 md:text-left md:text-sm",
-                selection[group]
-                  ? "bg-foreground/10 text-foreground"
-                  : "bg-muted/60 text-muted-foreground",
-              )}
-            >
-              <span id={`release-group-${group}-label`}>
-                {RELEASE_GROUP_LABELS[group]}
-              </span>
-              <Switch
-                size="sm"
-                checked={selection[group]}
-                onCheckedChange={() => handleToggle(group)}
-                aria-labelledby={`release-group-${group}-label`}
-                className="data-checked:border-cta data-checked:bg-cta [&_[data-slot=switch-thumb]]:data-checked:bg-cta-foreground"
-              />
-            </div>
-          ))}
-        </fieldset>
       </header>
 
-      <form onSubmit={handleSearch} className="flex flex-col gap-3">
-        <label htmlFor="artist-name" className="flex flex-col gap-2 text-sm">
-          Artist name
-          <Input
-            id="artist-name"
-            value={query}
-            onValueChange={setQuery}
-            autoComplete="off"
-            disabled={isSearching}
-          />
-        </label>
-        <Button type="submit" disabled={isSearching || query.trim() === ""}>
-          Search
-        </Button>
-      </form>
-
-      {isSearching ? (
-        <p aria-live="polite" className="text-sm text-muted-foreground">
-          Searching…
-        </p>
-      ) : null}
-
-      {errorMessage ? (
-        <p role="alert" className="text-sm text-destructive">
-          {errorMessage}
-        </p>
-      ) : null}
-
-      {emptyMessage ? (
-        <output className="block text-sm text-muted-foreground">
-          {emptyMessage}
-        </output>
-      ) : null}
-
-      {matches && matches.length > 0 ? (
-        <ul aria-label="Matching artists" className="flex flex-col gap-2">
-          {matches.map((artist) => (
-            <li key={artist.id}>
-              <ArtistMatch
-                artist={artist}
-                pressed={artist.id === pickedArtistId}
-                onPick={handlePick}
+      {pickedArtist ? (
+        <>
+          <div className="flex w-full flex-col items-start gap-2">
+            <SelectedArtist artist={pickedArtist} />
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleChangeArtist}
+              className="text-muted-foreground"
+            >
+              Choose a different artist
+            </Button>
+          </div>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 w-full text-base">
+              What do you want to include in your playlist?
+            </legend>
+            {RELEASE_GROUPS.map((group) => (
+              <div
+                key={group}
+                className={cn(
+                  "flex items-center gap-4 rounded-2xl pr-4 text-base",
+                  selection[group]
+                    ? "bg-foreground/10 text-foreground"
+                    : "bg-muted/60 text-muted-foreground",
+                )}
+              >
+                <label
+                  id={`release-group-${group}-label`}
+                  htmlFor={`release-group-${group}`}
+                  className="min-w-0 flex-1 cursor-pointer py-4 pl-4"
+                >
+                  {RELEASE_GROUP_LABELS[group]}
+                </label>
+                <Switch
+                  id={`release-group-${group}`}
+                  checked={selection[group]}
+                  onCheckedChange={() => handleToggle(group)}
+                  aria-labelledby={`release-group-${group}-label`}
+                  className="data-checked:border-cta data-checked:bg-cta [&_[data-slot=switch-thumb]]:data-checked:bg-cta-foreground"
+                />
+              </div>
+            ))}
+          </fieldset>
+          <Button
+            type="button"
+            size="lg"
+            className="h-12 w-full"
+            disabled={!canSave}
+          >
+            Save
+          </Button>
+        </>
+      ) : (
+        <>
+          <form onSubmit={handleSearch} className="flex flex-col gap-3">
+            <label
+              htmlFor="artist-name"
+              className="flex flex-col gap-2 text-sm"
+            >
+              Artist name
+              <Input
+                id="artist-name"
+                value={query}
+                onValueChange={setQuery}
+                autoComplete="off"
+                disabled={isSearching}
+                className="h-12 px-4 text-base"
               />
-            </li>
-          ))}
-        </ul>
-      ) : null}
+            </label>
+            <Button
+              type="submit"
+              size="lg"
+              className="h-12 w-full"
+              disabled={isSearching || query.trim() === ""}
+            >
+              Search
+            </Button>
+          </form>
 
-      <div className="mt-auto">
-        <Button
-          type="button"
-          size="lg"
-          className="h-12 w-full"
-          disabled={!canSave}
-        >
-          Save
-        </Button>
-      </div>
+          {isSearching ? (
+            <p aria-live="polite" className="text-sm text-muted-foreground">
+              Searching…
+            </p>
+          ) : null}
+
+          {errorMessage ? (
+            <p role="alert" className="text-sm text-destructive">
+              {errorMessage}
+            </p>
+          ) : null}
+
+          {emptyMessage ? (
+            <output className="block text-sm text-muted-foreground">
+              {emptyMessage}
+            </output>
+          ) : null}
+
+          {matches && matches.length > 0 ? (
+            <ul aria-label="Matching artists" className="flex flex-col gap-2">
+              {matches.map((artist) => (
+                <li key={artist.id}>
+                  <ArtistMatch artist={artist} onPick={handlePick} />
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </>
+      )}
     </section>
+  );
+}
+
+function SelectedArtist({ artist }: { artist: Artist }) {
+  return (
+    <div className="flex w-full items-center gap-3 rounded-2xl border border-foreground/25 bg-foreground/15 px-4 py-3">
+      <ArtistRow artist={artist} />
+    </div>
   );
 }
 
 function ArtistMatch({
   artist,
-  pressed,
   onPick,
 }: {
   artist: Artist;
-  pressed: boolean;
   onPick: (artistId: string) => void;
 }) {
   return (
     <Button
       type="button"
-      variant={pressed ? "secondary" : "outline"}
-      aria-pressed={pressed}
+      variant="outline"
       onClick={() => onPick(artist.id)}
       className="h-auto w-full justify-start gap-3 px-3 py-2 whitespace-normal"
     >
+      <ArtistRow artist={artist} />
+    </Button>
+  );
+}
+
+function ArtistRow({ artist }: { artist: Artist }) {
+  return (
+    <>
       <ArtistImage artist={artist} />
       <span className="min-w-0 flex-1 truncate text-left">{artist.name}</span>
-    </Button>
+    </>
   );
 }
 
