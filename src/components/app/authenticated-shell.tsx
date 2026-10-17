@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowLeft, LayoutDashboard, LogOut, Waves } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { AppLogo } from "@/components/app/app-logo";
 import { InstallNavFooter } from "@/components/app/install-section";
 import { DASHBOARD_HREF, TOOLS } from "@/components/app/tools";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -144,9 +145,7 @@ function MobileTopBar({
       <div className="flex h-14 items-center justify-between gap-3 px-4">
         {isDashboard ? (
           <>
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-2xl bg-cta text-cta-foreground">
-              <Waves aria-hidden className="size-4" />
-            </span>
+            <AppLogo className="size-8 shrink-0 text-foreground" />
             <div className="flex min-w-0 items-center gap-2">
               <span
                 aria-hidden
@@ -177,9 +176,7 @@ function MobileTopBar({
 function BrandLockup() {
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-cta text-cta-foreground">
-        <Waves aria-hidden className="size-5" />
-      </span>
+      <AppLogo className="size-10 shrink-0 text-foreground" />
       <div className="flex min-w-0 flex-col leading-tight">
         <span className="truncate text-lg font-medium tracking-tight">
           SpotiTools
