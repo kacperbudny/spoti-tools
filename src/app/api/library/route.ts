@@ -1,7 +1,7 @@
 import { SessionDeadError } from "@/lib/auth/errors";
 import { getSpotifyAccessToken } from "@/lib/auth/session";
 import { encodeLibraryStreamEvent } from "@/lib/random-album/library-stream";
-import { SpotifyClient, SpotifyUnavailableError } from "@/lib/spotify/client";
+import { SpotifyClient, SpotifyClientError } from "@/lib/spotify/client";
 import { loadSpotifyLibrary } from "@/lib/spotify/load-spotify-library";
 
 export async function GET() {
@@ -29,7 +29,7 @@ export async function GET() {
           controller.enqueue(
             encodeLibraryStreamEvent({ type: "session-dead" }),
           );
-        } else if (error instanceof SpotifyUnavailableError) {
+        } else if (error instanceof SpotifyClientError) {
           controller.enqueue(
             encodeLibraryStreamEvent({
               type: "error",

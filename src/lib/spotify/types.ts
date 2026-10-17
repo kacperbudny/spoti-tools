@@ -26,8 +26,22 @@ export const spotifySavedAlbumsPageSchema = z.object({
   next: z.string().nullable(),
 });
 
+export const spotifyArtistSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  images: z.array(z.object({ url: z.string() })),
+});
+
+export const spotifyArtistSearchSchema = z.object({
+  artists: z.object({
+    items: z.array(spotifyArtistSchema),
+  }),
+});
+
 export type SpotifyAlbumType = z.infer<typeof spotifyAlbumTypeSchema>;
 export type SpotifySavedAlbumItem = z.infer<typeof spotifySavedAlbumItemSchema>;
 export type SpotifySavedAlbumsPage = z.infer<
   typeof spotifySavedAlbumsPageSchema
 >;
+export type SpotifyArtist = z.infer<typeof spotifyArtistSchema>;
+export type SpotifyArtistSearch = z.infer<typeof spotifyArtistSearchSchema>;

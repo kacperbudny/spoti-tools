@@ -1,4 +1,4 @@
-import { Disc3 } from "lucide-react";
+import { Disc3, ListMusic } from "lucide-react";
 
 export const TOOLS = [
   {
@@ -6,6 +6,12 @@ export const TOOLS = [
     name: "Random album",
     description: "A random album from your saved library.",
     icon: Disc3,
+  },
+  {
+    href: "/app/artist-playlist",
+    name: "Artist playlist",
+    description: "Save an artist's discography to a private playlist.",
+    icon: ListMusic,
   },
 ] as const;
 
