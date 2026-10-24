@@ -4,7 +4,6 @@ import { type SaveLogger, shouldLogTick } from "@/lib/artist-playlist/save-log";
 import type { SpotifyClient } from "@/lib/spotify/client";
 import {
   mapDiscographyRelease,
-  recordingIdsByTrackId,
   releaseGroupForAlbumGroup,
   spotifyAlbumGroups,
 } from "@/lib/spotify/map-discography";
@@ -18,10 +17,9 @@ const ARTIST_ALBUMS_PAGE_SIZE = 10;
 const ALBUM_TRACKS_PAGE_SIZE = 50;
 const REQUEST_CONCURRENCY = 4;
 const ALBUM_LOG_STEP = 10;
-const RECORDING_LOG_STEP = 25;
 
 export type DiscographyLoadProgress = {
-  stage: "releases" | "tracks" | "recordings";
+  stage: "releases" | "tracks";
   loaded: number;
   total: number;
 };
@@ -110,22 +108,9 @@ export async function loadArtistDiscography(
       return tracks;
     },
   );
-  const recordingIds = await loadRecordingIds(
-    client,
-    tracksByAlbum.flatMap((tracks) =>
-      tracks.flatMap((track) => (track.id ? [track.id] : [])),
-    ),
-    onProgress,
-    log,
-  );
 
   return groupedAlbums.map(({ album, group }, index) =>
-    mapDiscographyRelease(
-      album,
-      group,
-      tracksByAlbum[index] ?? [],
-      recordingIds,
-    ),
+    mapDiscographyRelease(album, group, tracksByAlbum[index] ?? []),
   );
 }
 
@@ -185,25 +170,6 @@ async function listAlbumTracks(
 
     offset += page.items.length;
   }
-}
-
-async function loadRecordingIds(
-  client: SpotifyClient,
-  trackIds: string[],
-  onProgress: ((progress: DiscographyLoadProgress) => void) | undefined,
-  log: SaveLogger,
-): Promise<Map<string, string>> {
-  const ids = [...new Set(trackIds)];
-  log("recordings", { loaded: 0, total: ids.length });
-  onProgress?.({ stage: "recordings", loaded: 0, total: ids.length });
-  const tracks = await client.getTracks(ids, (loaded) => {
-    if (shouldLogTick(loaded, ids.length, RECORDING_LOG_STEP)) {
-      log("recordings", { loaded, total: ids.length });
-    }
-
-    onProgress?.({ stage: "recordings", loaded, total: ids.length });
-  });
-  return recordingIdsByTrackId(tracks);
 }
 
 async function mapPool<T, R>(

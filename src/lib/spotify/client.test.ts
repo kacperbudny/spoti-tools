@@ -12,36 +12,6 @@ afterEach(() => {
 });
 
 describe("SpotifyClient", () => {
-  test("loads each recording from its own track", async () => {
-    const paths: string[] = [];
-    spyOn(http, "get").mockImplementation((input) => {
-      const url =
-        input instanceof URL
-          ? input
-          : new URL(input instanceof Request ? input.url : String(input));
-      paths.push(`${url.pathname}${url.search}`);
-      const id = url.pathname.split("/").pop();
-
-      return {
-        json: async () => ({
-          id,
-          external_ids: { isrc: `ISRC-${id}` },
-        }),
-      } as unknown as ReturnType<typeof http.get>;
-    });
-
-    const tracks = await new SpotifyClient("token").getTracks([
-      "track-1",
-      "track-2",
-    ]);
-
-    expect(paths).toEqual(["/v1/tracks/track-1", "/v1/tracks/track-2"]);
-    expect(tracks).toEqual([
-      { id: "track-1", external_ids: { isrc: "ISRC-track-1" } },
-      { id: "track-2", external_ids: { isrc: "ISRC-track-2" } },
-    ]);
-  });
-
   test("creates a private playlist with a blank description", async () => {
     let body: unknown;
     spyOn(http, "post").mockImplementation((_input, options) => {
@@ -167,11 +137,13 @@ describe("SpotifyClient", () => {
   });
 
   test("a day-long rate limit fails instead of waiting", async () => {
-    spyOn(globalThis, "fetch").mockImplementation((async () =>
-      new Response(null, {
-        status: 429,
-        headers: { "retry-after": "82459" },
-      })) as unknown as typeof fetch);
+    spyOn(globalThis, "fetch").mockImplementation(
+      (async () =>
+        new Response(null, {
+          status: 429,
+          headers: { "retry-after": "82459" },
+        })) as unknown as typeof fetch,
+    );
     const started = Date.now();
 
     const error = await new SpotifyClient("token")

@@ -4,7 +4,6 @@ export type ReleaseDatePrecision = "year" | "month" | "day";
 
 export type Track = {
   id: string;
-  recordingId?: string;
   artistIds: string[];
   discNumber: number;
   trackNumber: number;

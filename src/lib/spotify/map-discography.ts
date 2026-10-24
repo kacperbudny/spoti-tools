@@ -8,7 +8,6 @@ import type {
   SpotifyAlbumGroup,
   SpotifyAlbumTrack,
   SpotifyArtistAlbum,
-  SpotifyFullTrack,
 } from "@/lib/spotify/types";
 
 export function spotifyAlbumGroups(
@@ -25,27 +24,10 @@ export function releaseGroupForAlbumGroup(
   return group === "appears_on" ? "appearances" : group;
 }
 
-export function recordingIdsByTrackId(
-  tracks: Array<SpotifyFullTrack | null>,
-): Map<string, string> {
-  const recordingIds = new Map<string, string>();
-
-  for (const track of tracks) {
-    const recordingId = track?.external_ids?.isrc;
-
-    if (track && recordingId) {
-      recordingIds.set(track.id, recordingId);
-    }
-  }
-
-  return recordingIds;
-}
-
 export function mapDiscographyRelease(
   album: SpotifyArtistAlbum,
   group: ReleaseGroup,
   tracks: SpotifyAlbumTrack[],
-  recordingIds: ReadonlyMap<string, string>,
 ): Release {
   const imageUrl = album.images?.[0]?.url;
 
@@ -56,24 +38,18 @@ export function mapDiscographyRelease(
     releaseDate: album.release_date,
     releaseDatePrecision: album.release_date_precision,
     ...(imageUrl ? { imageUrl } : {}),
-    tracks: tracks.flatMap((track) => mapTrack(track, recordingIds)),
+    tracks: tracks.flatMap(mapTrack),
   };
 }
 
-function mapTrack(
-  track: SpotifyAlbumTrack,
-  recordingIds: ReadonlyMap<string, string>,
-): Track[] {
+function mapTrack(track: SpotifyAlbumTrack): Track[] {
   if (!track.id) {
     return [];
   }
 
-  const recordingId = recordingIds.get(track.id);
-
   return [
     {
       id: track.id,
-      recordingId: recordingId || undefined,
       artistIds: track.artists.flatMap((artist) =>
         artist.id ? [artist.id] : [],
       ),

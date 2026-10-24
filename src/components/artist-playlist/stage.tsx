@@ -399,7 +399,7 @@ function saveStatusLabel(progress: SaveProgress | null): string {
     progress.total !== null &&
     progress.total > 0
   ) {
-    return `${progress.label}: ${progress.loaded} out of ${progress.total}…`;
+    return `${progress.label}: ${progress.loaded} out of ${progress.total} releases…`;
   }
 
   return progress.label;

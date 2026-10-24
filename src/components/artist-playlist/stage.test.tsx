@@ -63,7 +63,7 @@ describe("ArtistPlaylistStage", () => {
     expect(button.getAttribute("aria-busy")).toBe("true");
     expect((button as HTMLButtonElement).disabled).toBe(true);
     const status = screen.getByText(
-      "Retrieving the artist's songs: 23 out of 153…",
+      "Retrieving the artist's songs: 23 out of 153 releases…",
     );
     expect(status.getAttribute("aria-live")).toBe("polite");
     expect(status.className).toContain("animate-pulse");
@@ -73,7 +73,7 @@ describe("ArtistPlaylistStage", () => {
     ).toBeNull();
   });
 
-  test("saving pulses the status until the song count arrives", () => {
+  test("saving pulses the status until the release count arrives", () => {
     save = idleSave({ isSaving: true });
     render(<ArtistPlaylistStage />);
 

@@ -37,16 +37,12 @@ export function planArtistPlaylist(input: {
       continue;
     }
 
-    const key = track.recordingId
-      ? `recording:${track.recordingId}`
-      : `track:${track.id}`;
-
-    if (seen.has(key)) {
+    if (seen.has(track.id)) {
       droppedTrackIds.push(track.id);
       continue;
     }
 
-    seen.add(key);
+    seen.add(track.id);
     kept.push(track);
   }
 

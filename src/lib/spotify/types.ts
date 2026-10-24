@@ -76,15 +76,6 @@ export const spotifyAlbumTracksPageSchema = z.object({
   next: z.string().nullable(),
 });
 
-export const spotifyFullTrackSchema = z.object({
-  id: z.string(),
-  external_ids: z
-    .object({
-      isrc: z.string().optional(),
-    })
-    .nullish(),
-});
-
 export const spotifyCreatedPlaylistSchema = z.object({
   id: z.string(),
   external_urls: z.object({
@@ -118,7 +109,6 @@ export type SpotifyAlbumTrack = z.infer<typeof spotifyAlbumTrackSchema>;
 export type SpotifyAlbumTracksPage = z.infer<
   typeof spotifyAlbumTracksPageSchema
 >;
-export type SpotifyFullTrack = z.infer<typeof spotifyFullTrackSchema>;
 export type SpotifyCreatedPlaylist = z.infer<
   typeof spotifyCreatedPlaylistSchema
 >;

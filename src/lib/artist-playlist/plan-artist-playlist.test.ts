@@ -131,37 +131,7 @@ describe("planArtistPlaylist", () => {
     });
   });
 
-  test("keeps one copy of a recording and keeps a remix and a live version", () => {
-    expect(
-      plan({
-        releases: [
-          release({
-            id: "single",
-            group: "single",
-            releaseDate: "1998-05-01",
-            tracks: [track("single-version", { recordingId: "SONG" })],
-          }),
-          release({
-            id: "album",
-            releaseDate: "2001-05-01",
-            tracks: [
-              track("album-version", { recordingId: "SONG" }),
-              track("remix", { recordingId: "SONG-RMX", trackNumber: 2 }),
-              track("live", { recordingId: "SONG-LIVE", trackNumber: 3 }),
-            ],
-          }),
-        ],
-      }),
-    ).toEqual({
-      kind: "create",
-      title: "Ada discography",
-      trackIds: ["single-version", "remix", "live"],
-      truncated: false,
-      droppedTrackIds: ["album-version"],
-    });
-  });
-
-  test("keeps one copy when two tracks share a Spotify id and have no recording id", () => {
+  test("keeps one copy when two releases list the same Spotify track", () => {
     expect(
       plan({
         releases: [
@@ -187,24 +157,27 @@ describe("planArtistPlaylist", () => {
     });
   });
 
-  test("keeps each track that has no recording id", () => {
+  test("keeps the same song as separate tracks when it has different Spotify ids", () => {
     expect(
       plan({
         releases: [
           release({
+            id: "single",
+            group: "single",
+            releaseDate: "1998-01-01",
+            tracks: [track("single-version")],
+          }),
+          release({
             id: "album",
-            tracks: [
-              track("with-id", { recordingId: "SONG" }),
-              track("no-id-a", { trackNumber: 2 }),
-              track("no-id-b", { trackNumber: 3 }),
-            ],
+            releaseDate: "2001-01-01",
+            tracks: [track("album-version")],
           }),
         ],
       }),
     ).toEqual({
       kind: "create",
       title: "Ada discography",
-      trackIds: ["with-id", "no-id-a", "no-id-b"],
+      trackIds: ["single-version", "album-version"],
       truncated: false,
       droppedTrackIds: [],
     });
@@ -379,7 +352,7 @@ describe("planArtistPlaylist", () => {
           release({
             id: "remixes",
             name: "Remixes",
-            tracks: [track("remix-1", { recordingId: "RMX" })],
+            tracks: [track("remix-1")],
           }),
         ],
       }),
