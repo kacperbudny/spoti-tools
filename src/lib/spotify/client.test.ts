@@ -57,11 +57,27 @@ describe("SpotifyClient", () => {
     expect(body).toEqual({
       name: "Ada discography",
       public: false,
+      collaborative: false,
       description: " ",
     });
   });
 
-  test("keeps the playlist private and replaces a missing description", async () => {
+  test("writes a blank description on its own", async () => {
+    let body: unknown;
+    spyOn(http, "put").mockImplementation((_input, options) => {
+      body = options?.json;
+
+      return {
+        text: async () => "",
+      } as unknown as ReturnType<typeof http.put>;
+    });
+
+    await new SpotifyClient("token").setPlaylistDescription("playlist-1");
+
+    expect(body).toEqual({ description: " " });
+  });
+
+  test("sets the playlist private after other edits, and repeats the name", async () => {
     let body: unknown;
     let path = "";
     spyOn(http, "put").mockImplementation((input, options) => {
@@ -77,10 +93,13 @@ describe("SpotifyClient", () => {
       } as unknown as ReturnType<typeof http.put>;
     });
 
-    await new SpotifyClient("token").setPrivatePlaylistDetails("playlist-1");
+    await new SpotifyClient("token").makePlaylistPrivate(
+      "playlist-1",
+      "Ada discography",
+    );
 
     expect(path).toBe("/v1/playlists/playlist-1");
-    expect(body).toEqual({ public: false, description: " " });
+    expect(body).toEqual({ name: "Ada discography", public: false });
   });
 
   test("reads the playlist cover from the first image", async () => {

@@ -54,7 +54,8 @@ export async function saveArtistPlaylist(
   }
 
   if (plan.kind === "rewrite") {
-    await client.setPrivatePlaylistDetails(plan.playlistId);
+    await client.setPlaylistDescription(plan.playlistId);
+    await client.makePlaylistPrivate(plan.playlistId, plan.title);
     return {
       kind: "rewrite",
       url: `https://open.spotify.com/playlist/${plan.playlistId}`,
@@ -69,11 +70,12 @@ export async function saveArtistPlaylist(
     artistId: input.artistId,
     playlistId: created.id,
   });
-  await client.setPrivatePlaylistDetails(created.id);
+  await client.setPlaylistDescription(created.id);
   onProgress?.(saveProgress("playlist", 1, writeSteps));
   await writePlaylistTracks(client, created.id, plan.trackIds, (written) => {
     onProgress?.(saveProgress("playlist", written + 1, writeSteps));
   });
+  await client.makePlaylistPrivate(created.id, plan.title);
   const coverUrl = await playlistCover(
     client,
     created.id,

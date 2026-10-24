@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ListMusic, Loader2 } from "lucide-react";
+import { CircleCheck, ListMusic, Loader2 } from "lucide-react";
 import type { FormEvent } from "react";
 import { useArtistPick } from "@/components/artist-playlist/use-artist-pick";
 import { useArtistSearch } from "@/components/artist-playlist/use-artist-search";
@@ -403,14 +403,30 @@ function PlaylistSavedScreen({
   return (
     <div className="flex w-full flex-col gap-6">
       <div className="flex flex-col gap-3">
-        <h2 className="flex items-center gap-3 font-heading text-3xl font-medium tracking-tight text-cta">
-          <Check className="size-8 shrink-0" aria-hidden />
+        <h2 className="flex items-center gap-3 font-heading text-3xl font-medium tracking-tight">
+          <CircleCheck className="size-8 shrink-0 text-cta" aria-hidden />
           Playlist successfully saved!
         </h2>
         <div className="flex items-center gap-4">
-          {coverUrl ? <PlaylistCover src={coverUrl} title={title} /> : null}
+          {coverUrl ? (
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              className="shrink-0 rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+            >
+              <PlaylistCover src={coverUrl} title={title} />
+            </a>
+          ) : null}
           <div className="flex min-w-0 flex-col gap-1">
-            <p className="text-lg">{title}</p>
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-lg underline-offset-4 hover:underline"
+            >
+              {title}
+            </a>
             <p className="text-muted-foreground">{songCount(trackCount)}</p>
           </div>
         </div>

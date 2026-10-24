@@ -110,16 +110,30 @@ export class SpotifyClient {
     const url = new URL(`${SPOTIFY_API_BASE}/me/playlists`);
     const body = await this.callSpotify(url, {
       method: "POST",
-      json: { name, public: false, description: BLANK_PLAYLIST_DESCRIPTION },
+      json: {
+        name,
+        public: false,
+        collaborative: false,
+        description: BLANK_PLAYLIST_DESCRIPTION,
+      },
     });
     return this.parseSpotify(spotifyCreatedPlaylistSchema, body);
   }
 
-  async setPrivatePlaylistDetails(playlistId: string): Promise<void> {
+  async setPlaylistDescription(playlistId: string): Promise<void> {
     const url = new URL(`${SPOTIFY_API_BASE}/playlists/${playlistId}`);
     await this.callSpotify(url, {
       method: "PUT",
-      json: { public: false, description: BLANK_PLAYLIST_DESCRIPTION },
+      json: { description: BLANK_PLAYLIST_DESCRIPTION },
+      readBody: false,
+    });
+  }
+
+  async makePlaylistPrivate(playlistId: string, name: string): Promise<void> {
+    const url = new URL(`${SPOTIFY_API_BASE}/playlists/${playlistId}`);
+    await this.callSpotify(url, {
+      method: "PUT",
+      json: { name, public: false },
       readBody: false,
     });
   }
