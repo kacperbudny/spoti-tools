@@ -47,6 +47,13 @@ export function useArtistSearch() {
     return true;
   }
 
+  function reset() {
+    setQuery("");
+    setMatches([]);
+    setFormError(null);
+    searchMutation.reset();
+  }
+
   return {
     query,
     matches,
@@ -55,6 +62,7 @@ export function useArtistSearch() {
     errorMessage: formError,
     setQuery,
     handleSearch,
+    reset,
   };
 }
 

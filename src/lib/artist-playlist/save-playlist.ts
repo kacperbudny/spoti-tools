@@ -2,6 +2,7 @@ import "server-only";
 
 import { loadArtistDiscography } from "@/lib/artist-playlist/load-discography";
 import { planArtistPlaylist } from "@/lib/artist-playlist/plan-artist-playlist";
+import type { Release } from "@/lib/artist-playlist/release";
 import type { ReleaseGroupSelection } from "@/lib/artist-playlist/release-groups";
 import {
   findRememberedPlaylistId,
@@ -53,14 +54,14 @@ export async function saveArtistPlaylist(
   }
 
   if (plan.kind === "rewrite") {
-    await client.blankPlaylistDescription(plan.playlistId);
+    await client.setPrivatePlaylistDetails(plan.playlistId);
     return {
       kind: "rewrite",
       url: `https://open.spotify.com/playlist/${plan.playlistId}`,
     };
   }
 
-  const writeSteps = Math.ceil(plan.trackIds.length / PLAYLIST_WRITE_CHUNK) + 1;
+  const writeSteps = Math.ceil(plan.trackIds.length / PLAYLIST_WRITE_CHUNK) + 2;
   onProgress?.(saveProgress("playlist", 0, writeSteps));
   const created = await client.createPrivatePlaylist(plan.title);
   await rememberPlaylist({
@@ -68,17 +69,25 @@ export async function saveArtistPlaylist(
     artistId: input.artistId,
     playlistId: created.id,
   });
-  await client.blankPlaylistDescription(created.id);
+  await client.setPrivatePlaylistDetails(created.id);
   onProgress?.(saveProgress("playlist", 1, writeSteps));
   await writePlaylistTracks(client, created.id, plan.trackIds, (written) => {
     onProgress?.(saveProgress("playlist", written + 1, writeSteps));
   });
+  const coverUrl = await playlistCover(
+    client,
+    created.id,
+    releases,
+    plan.trackIds[0],
+  );
+  onProgress?.(saveProgress("playlist", writeSteps, writeSteps));
 
   return {
     kind: "created",
     url: created.external_urls.spotify,
     title: plan.title,
     trackCount: plan.trackIds.length,
+    coverUrl,
     truncated: plan.truncated,
   };
 }
@@ -105,6 +114,50 @@ async function writePlaylistTracks(
     written += 1;
     onWritten?.(written);
   }
+}
+
+async function playlistCover(
+  client: SpotifyClient,
+  playlistId: string,
+  releases: Release[],
+  firstTrackId: string | undefined,
+): Promise<string | null> {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const coverUrl = await client.getPlaylistCoverUrl(playlistId);
+      if (coverUrl) {
+        return coverUrl;
+      }
+    } catch {
+      break;
+    }
+
+    if (attempt < 2) {
+      await delay(300);
+    }
+  }
+
+  return releaseCover(releases, firstTrackId);
+}
+
+function releaseCover(
+  releases: Release[],
+  trackId: string | undefined,
+): string | null {
+  if (!trackId) {
+    return null;
+  }
+
+  const release = releases.find((item) =>
+    item.tracks.some((track) => track.id === trackId),
+  );
+  return release?.imageUrl ?? null;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 function chunk<T>(items: T[], size: number): T[][] {

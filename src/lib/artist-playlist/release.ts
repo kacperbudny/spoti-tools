@@ -16,5 +16,6 @@ export type Release = {
   group: ReleaseGroup;
   releaseDate: string;
   releaseDatePrecision: ReleaseDatePrecision;
+  imageUrl?: string;
   tracks: Track[];
 };

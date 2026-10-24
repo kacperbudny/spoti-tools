@@ -16,6 +16,7 @@ import {
   spotifyArtistSearchSchema,
   spotifyCreatedPlaylistSchema,
   spotifyFullTrackSchema,
+  spotifyPlaylistImagesSchema,
   spotifyPlaylistSnapshotSchema,
   spotifySavedAlbumsPageSchema,
 } from "@/lib/spotify/types";
@@ -114,13 +115,20 @@ export class SpotifyClient {
     return this.parseSpotify(spotifyCreatedPlaylistSchema, body);
   }
 
-  async blankPlaylistDescription(playlistId: string): Promise<void> {
+  async setPrivatePlaylistDetails(playlistId: string): Promise<void> {
     const url = new URL(`${SPOTIFY_API_BASE}/playlists/${playlistId}`);
     await this.callSpotify(url, {
       method: "PUT",
-      json: { description: BLANK_PLAYLIST_DESCRIPTION },
+      json: { public: false, description: BLANK_PLAYLIST_DESCRIPTION },
       readBody: false,
     });
+  }
+
+  async getPlaylistCoverUrl(playlistId: string): Promise<string | null> {
+    const url = new URL(`${SPOTIFY_API_BASE}/playlists/${playlistId}/images`);
+    const body = await this.callSpotify(url);
+    const images = this.parseSpotify(spotifyPlaylistImagesSchema, body);
+    return images[0]?.url ?? null;
   }
 
   async replacePlaylistItems(

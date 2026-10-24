@@ -49,6 +49,10 @@ export function ArtistPlaylistStage() {
           selection={pick.selection}
           canSave={pick.canSave}
           onChangeArtist={pick.clearPick}
+          onCreateAnother={() => {
+            search.reset();
+            pick.clearPick();
+          }}
           onToggle={pick.handleToggle}
         />
       ) : (
@@ -72,12 +76,14 @@ function ArtistPlaylistConfigureStep({
   selection,
   canSave,
   onChangeArtist,
+  onCreateAnother,
   onToggle,
 }: {
   artist: Artist;
   selection: ReleaseGroupSelection;
   canSave: boolean;
   onChangeArtist: () => void;
+  onCreateAnother: () => void;
   onToggle: (group: ReleaseGroup) => void;
 }) {
   const save = useSavePlaylist(selection);
@@ -87,9 +93,10 @@ function ArtistPlaylistConfigureStep({
       <PlaylistSavedScreen
         title={save.result.title}
         trackCount={save.result.trackCount}
+        coverUrl={save.result.coverUrl}
         url={save.result.url}
         truncated={save.result.truncated}
-        onChooseAnother={onChangeArtist}
+        onCreateAnother={onCreateAnother}
       />
     );
   }
@@ -98,7 +105,9 @@ function ArtistPlaylistConfigureStep({
     <>
       <div className="flex w-full flex-col items-start gap-2">
         <SelectedArtist artist={artist} />
-        <ChangeArtistButton onClick={onChangeArtist} />
+        <ChangeArtistButton onClick={onChangeArtist}>
+          Choose a different artist
+        </ChangeArtistButton>
       </div>
       <ReleaseGroupFieldset selection={selection} onToggle={onToggle} />
       <SavePlaylistForm
@@ -256,7 +265,13 @@ function ArtistMatchList({
   );
 }
 
-function ChangeArtistButton({ onClick }: { onClick: () => void }) {
+function ChangeArtistButton({
+  onClick,
+  children,
+}: {
+  onClick: () => void;
+  children: string;
+}) {
   return (
     <Button
       type="button"
@@ -264,7 +279,7 @@ function ChangeArtistButton({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       className="text-muted-foreground"
     >
-      Choose a different artist
+      {children}
     </Button>
   );
 }
@@ -373,15 +388,17 @@ function SavePlaylistProgress({
 function PlaylistSavedScreen({
   title,
   trackCount,
+  coverUrl,
   url,
   truncated,
-  onChooseAnother,
+  onCreateAnother,
 }: {
   title: string;
   trackCount: number;
+  coverUrl: string | null;
   url: string;
   truncated: boolean;
-  onChooseAnother: () => void;
+  onCreateAnother: () => void;
 }) {
   return (
     <div className="flex w-full flex-col gap-6">
@@ -389,6 +406,7 @@ function PlaylistSavedScreen({
         <h2 className="font-heading text-3xl font-medium tracking-tight">
           Playlist successfully saved
         </h2>
+        {coverUrl ? <PlaylistCover src={coverUrl} title={title} /> : null}
         <p className="text-lg">{title}</p>
         <p className="text-muted-foreground">{songCount(trackCount)}</p>
         {truncated ? (
@@ -405,8 +423,21 @@ function PlaylistSavedScreen({
       >
         Open playlist on Spotify
       </a>
-      <ChangeArtistButton onClick={onChooseAnother} />
+      <ChangeArtistButton onClick={onCreateAnother}>
+        Create another playlist
+      </ChangeArtistButton>
     </div>
+  );
+}
+
+function PlaylistCover({ src, title }: { src: string; title: string }) {
+  return (
+    // biome-ignore lint/performance/noImgElement: Spotify playlist covers are external and dynamic.
+    <img
+      src={src}
+      alt={`${title} cover`}
+      className="aspect-square w-full rounded-2xl object-cover"
+    />
   );
 }
 

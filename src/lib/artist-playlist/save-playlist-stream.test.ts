@@ -18,6 +18,7 @@ describe("save playlist stream", () => {
         url: "https://open.spotify.com/playlist/abc",
         title: "Ada discography",
         trackCount: 12,
+        coverUrl: "https://mosaic.scdn.co/640/cover",
         truncated: false,
       },
     });
@@ -39,6 +40,7 @@ describe("save playlist stream", () => {
           url: "https://open.spotify.com/playlist/abc",
           title: "Ada discography",
           trackCount: 12,
+          coverUrl: "https://mosaic.scdn.co/640/cover",
           truncated: false,
         },
       },

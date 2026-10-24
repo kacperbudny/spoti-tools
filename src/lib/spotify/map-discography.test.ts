@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { mapDiscographyRelease } from "@/lib/spotify/map-discography";
 import { spotifyArtistAlbumsPageSchema } from "@/lib/spotify/types";
 
 const album = {
@@ -19,5 +20,16 @@ describe("spotifyArtistAlbumsPageSchema", () => {
       items: [album, { ...album, id: "album-2" }],
       next: null,
     });
+  });
+
+  test("keeps the release cover when Spotify sends one", () => {
+    expect(
+      mapDiscographyRelease(
+        { ...album, images: [{ url: "https://example.com/cover.jpg" }] },
+        "album",
+        [],
+        new Map(),
+      ).imageUrl,
+    ).toBe("https://example.com/cover.jpg");
   });
 });

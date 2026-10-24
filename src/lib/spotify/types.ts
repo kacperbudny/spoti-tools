@@ -56,6 +56,7 @@ export const spotifyArtistAlbumSchema = z.object({
   name: z.string(),
   release_date: z.string(),
   release_date_precision: spotifyReleaseDatePrecisionSchema,
+  images: z.array(z.object({ url: z.string() })).nullish(),
 });
 
 export const spotifyArtistAlbumsPageSchema = z.object({
@@ -94,6 +95,12 @@ export const spotifyCreatedPlaylistSchema = z.object({
 export const spotifyPlaylistSnapshotSchema = z.object({
   snapshot_id: z.string(),
 });
+
+export const spotifyPlaylistImagesSchema = z.array(
+  z.object({
+    url: z.string(),
+  }),
+);
 
 export type SpotifyAlbumType = z.infer<typeof spotifyAlbumTypeSchema>;
 export type SpotifySavedAlbumItem = z.infer<typeof spotifySavedAlbumItemSchema>;

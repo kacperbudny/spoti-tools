@@ -5,6 +5,8 @@ import { DEFAULT_RELEASE_GROUP_SELECTION } from "@/lib/artist-playlist/release-g
 import type { SavePlaylistResponse } from "@/lib/artist-playlist/save-playlist-response";
 import type { SaveProgress } from "@/lib/artist-playlist/save-progress";
 
+const resetSearch = mock(() => {});
+const clearPick = mock(() => {});
 let save = idleSave();
 
 mock.module("@/components/artist-playlist/use-artist-search", () => ({
@@ -16,6 +18,7 @@ mock.module("@/components/artist-playlist/use-artist-search", () => ({
     errorMessage: null,
     setQuery: () => {},
     handleSearch: () => false,
+    reset: resetSearch,
   }),
 }));
 
@@ -26,7 +29,7 @@ mock.module("@/components/artist-playlist/use-artist-pick", () => ({
     canSave: true,
     handleToggle: () => {},
     handlePick: () => {},
-    clearPick: () => {},
+    clearPick,
   }),
 }));
 
@@ -72,6 +75,7 @@ describe("ArtistPlaylistStage", () => {
         url: "https://open.spotify.com/playlist/ada",
         title: "Ada discography",
         trackCount: 12,
+        coverUrl: "https://example.com/ada-cover.jpg",
         truncated: false,
       },
     });
@@ -80,6 +84,11 @@ describe("ArtistPlaylistStage", () => {
     expect(
       screen.getByRole("heading", { name: "Playlist successfully saved" }),
     ).toBeTruthy();
+    expect(
+      screen
+        .getByRole("img", { name: "Ada discography cover" })
+        .getAttribute("src"),
+    ).toBe("https://example.com/ada-cover.jpg");
     expect(screen.getByText("Ada discography")).toBeTruthy();
     expect(screen.getByText("12 songs")).toBeTruthy();
     expect(
@@ -102,11 +111,15 @@ describe("ArtistPlaylistStage", () => {
         url: "https://open.spotify.com/playlist/ada",
         title: "Ada discography",
         trackCount: 1,
+        coverUrl: null,
         truncated: true,
       },
     });
     render(<ArtistPlaylistStage />);
 
+    expect(
+      screen.queryByRole("img", { name: "Ada discography cover" }),
+    ).toBeNull();
     expect(screen.getByText("1 song")).toBeTruthy();
     expect(
       screen.getByText(
@@ -124,6 +137,27 @@ describe("ArtistPlaylistStage", () => {
     expect(
       screen.queryByRole("heading", { name: "Playlist successfully saved" }),
     ).toBeNull();
+  });
+
+  test("create another playlist clears the search and the picked artist", () => {
+    save = idleSave({
+      result: {
+        kind: "created",
+        url: "https://open.spotify.com/playlist/ada",
+        title: "Ada discography",
+        trackCount: 12,
+        coverUrl: null,
+        truncated: false,
+      },
+    });
+    resetSearch.mockClear();
+    clearPick.mockClear();
+    render(<ArtistPlaylistStage />);
+
+    screen.getByRole("button", { name: "Create another playlist" }).click();
+
+    expect(resetSearch).toHaveBeenCalledTimes(1);
+    expect(clearPick).toHaveBeenCalledTimes(1);
   });
 });
 

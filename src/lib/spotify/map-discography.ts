@@ -47,12 +47,15 @@ export function mapDiscographyRelease(
   tracks: SpotifyAlbumTrack[],
   recordingIds: ReadonlyMap<string, string>,
 ): Release {
+  const imageUrl = album.images?.[0]?.url;
+
   return {
     id: album.id,
     name: album.name,
     group,
     releaseDate: album.release_date,
     releaseDatePrecision: album.release_date_precision,
+    ...(imageUrl ? { imageUrl } : {}),
     tracks: tracks.flatMap((track) => mapTrack(track, recordingIds)),
   };
 }

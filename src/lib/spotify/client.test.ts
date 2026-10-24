@@ -61,7 +61,7 @@ describe("SpotifyClient", () => {
     });
   });
 
-  test("replaces a missing description so Spotify does not show null", async () => {
+  test("keeps the playlist private and replaces a missing description", async () => {
     let body: unknown;
     let path = "";
     spyOn(http, "put").mockImplementation((input, options) => {
@@ -77,9 +77,35 @@ describe("SpotifyClient", () => {
       } as unknown as ReturnType<typeof http.put>;
     });
 
-    await new SpotifyClient("token").blankPlaylistDescription("playlist-1");
+    await new SpotifyClient("token").setPrivatePlaylistDetails("playlist-1");
 
     expect(path).toBe("/v1/playlists/playlist-1");
-    expect(body).toEqual({ description: " " });
+    expect(body).toEqual({ public: false, description: " " });
+  });
+
+  test("reads the playlist cover from the first image", async () => {
+    spyOn(http, "get").mockImplementation(
+      () =>
+        ({
+          json: async () => [
+            {
+              url: "https://mosaic.scdn.co/640/cover",
+              height: 640,
+              width: 640,
+            },
+            {
+              url: "https://mosaic.scdn.co/300/cover",
+              height: 300,
+              width: 300,
+            },
+          ],
+        }) as unknown as ReturnType<typeof http.get>,
+    );
+
+    const coverUrl = await new SpotifyClient("token").getPlaylistCoverUrl(
+      "playlist-1",
+    );
+
+    expect(coverUrl).toBe("https://mosaic.scdn.co/640/cover");
   });
 });
