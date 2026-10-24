@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, mock, spyOn, test } from "bun:test";
+import { HTTPError } from "ky";
 import { http } from "@/lib/http/ky";
-import { SpotifyClient } from "@/lib/spotify/client";
+import { SpotifyClient, SpotifyClientError } from "@/lib/spotify/client";
 
 afterEach(() => {
   mock.restore();
@@ -126,5 +127,38 @@ describe("SpotifyClient", () => {
     );
 
     expect(coverUrl).toBe("https://mosaic.scdn.co/640/cover");
+  });
+
+  test("logs a failed request with the path and status, not the access token", async () => {
+    const lines: unknown[][] = [];
+    spyOn(console, "error").mockImplementation((...args: unknown[]) => {
+      lines.push(args);
+    });
+    const response = new Response(null, {
+      status: 429,
+      headers: { "retry-after": "30" },
+    });
+    spyOn(http, "get").mockImplementation(() => {
+      throw new HTTPError(
+        response,
+        new Request(
+          "https://api.spotify.com/v1/artists/ada/albums?offset=0&limit=10",
+        ),
+        {} as never,
+      );
+    });
+
+    await expect(
+      new SpotifyClient("super-secret-token").getArtistAlbumsPage(
+        "ada",
+        ["album"],
+        0,
+      ),
+    ).rejects.toBeInstanceOf(SpotifyClientError);
+
+    const text = JSON.stringify(lines);
+    expect(text).toContain("/v1/artists/ada/albums");
+    expect(text).toContain("429");
+    expect(text).not.toContain("super-secret-token");
   });
 });

@@ -3,6 +3,7 @@ import type * as z from "zod";
 import type { Artist } from "@/lib/artist-playlist/artist";
 import { SessionDeadError } from "@/lib/auth/errors";
 import { http } from "@/lib/http/ky";
+import { spotifyFailureFields, spotifyPath } from "@/lib/spotify/log";
 import { mapSpotifyArtistSearch } from "@/lib/spotify/map-artist";
 import {
   type SpotifyAlbumGroup,
@@ -25,6 +26,8 @@ const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
 const ARTIST_SEARCH_LIMIT = 10;
 const TRACK_FETCH_CONCURRENCY = 4;
 const BLANK_PLAYLIST_DESCRIPTION = " ";
+const SLOW_SPOTIFY_MS = 5_000;
+const RETRIED_STATUSES = new Set([408, 413, 429, 500, 502, 503, 504]);
 
 export class SpotifyClientError extends Error {
   constructor() {
@@ -173,10 +176,15 @@ export class SpotifyClient {
     const headers = {
       Authorization: `Bearer ${this.accessToken}`,
     };
+    const method = init?.method ?? "GET";
+    const startedAt = Date.now();
+    let failed = false;
 
     try {
       if (!init) {
-        return await http.get(url, { headers, timeout: 20_000 }).json();
+        return await http
+          .get(url, { headers, timeout: 20_000, hooks: spotifyHooks() })
+          .json();
       }
 
       const send = init.method === "POST" ? http.post : http.put;
@@ -184,6 +192,7 @@ export class SpotifyClient {
         headers,
         json: init.json,
         timeout: 20_000,
+        hooks: spotifyHooks(),
       });
 
       if (init.readBody === false) {
@@ -193,6 +202,17 @@ export class SpotifyClient {
 
       return await response.json();
     } catch (error) {
+      failed = true;
+      console.error(
+        "[spotify]",
+        spotifyFailureFields(
+          error,
+          method,
+          url.toString(),
+          Date.now() - startedAt,
+        ),
+      );
+
       if (error instanceof HTTPError) {
         const status = error.response.status;
 
@@ -201,7 +221,18 @@ export class SpotifyClient {
         }
       }
 
-      throw this.handleError(error);
+      throw new SpotifyClientError();
+    } finally {
+      const elapsedMs = Date.now() - startedAt;
+
+      if (!failed && elapsedMs >= SLOW_SPOTIFY_MS) {
+        console.info("[spotify]", {
+          event: "slow",
+          method,
+          path: spotifyPath(url.toString()),
+          elapsedMs,
+        });
+      }
     }
   }
 
@@ -217,9 +248,61 @@ export class SpotifyClient {
   }
 
   private handleError(error: unknown): SpotifyClientError {
-    console.error(error instanceof Error ? error.message : String(error));
+    if (!(error instanceof HTTPError)) {
+      console.error(error instanceof Error ? error.message : String(error));
+    }
+
     return new SpotifyClientError();
   }
+}
+
+function spotifyHooks() {
+  return {
+    afterResponse: [
+      ({
+        request,
+        response,
+        retryCount,
+      }: {
+        request: Request;
+        response: Response;
+        retryCount: number;
+      }) => {
+        if (!RETRIED_STATUSES.has(response.status)) {
+          return;
+        }
+
+        console.info("[spotify]", {
+          event: "waiting",
+          method: request.method,
+          path: spotifyPath(request.url),
+          status: response.status,
+          retryAfter: response.headers.get("retry-after"),
+          retryCount,
+        });
+      },
+    ],
+    beforeRetry: [
+      ({
+        request,
+        error,
+        retryCount,
+      }: {
+        request: Request;
+        error: Error;
+        retryCount: number;
+      }) => {
+        console.info("[spotify]", {
+          event: "retry",
+          method: request.method,
+          path: spotifyPath(request.url),
+          status: error instanceof HTTPError ? error.response.status : null,
+          retryCount,
+          message: error.message,
+        });
+      },
+    ],
+  };
 }
 
 async function mapPool<T, R>(
