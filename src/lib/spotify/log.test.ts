@@ -1,6 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { HTTPError } from "ky";
-import { spotifyFailureFields, spotifyPath } from "@/lib/spotify/log";
+import {
+  longRateLimitWait,
+  rateLimitMessage,
+  spotifyFailureFields,
+  spotifyPath,
+} from "@/lib/spotify/log";
 
 describe("spotify logs", () => {
   test("keeps the path and drops a token query", () => {
@@ -37,5 +42,13 @@ describe("spotify logs", () => {
       elapsedMs: 1200,
     });
     expect(JSON.stringify(fields)).not.toContain("super-secret-token");
+  });
+
+  test("turns a day-long Retry-After into a rate-limit message", () => {
+    expect(longRateLimitWait("82459")).toBe(82459);
+    expect(longRateLimitWait("2")).toBeNull();
+    expect(rateLimitMessage(82459)).toBe(
+      "Spotify is rate limiting requests. Try again in about 23 hours.",
+    );
   });
 });

@@ -3,7 +3,12 @@ import type * as z from "zod";
 import type { Artist } from "@/lib/artist-playlist/artist";
 import { SessionDeadError } from "@/lib/auth/errors";
 import { http } from "@/lib/http/ky";
-import { spotifyFailureFields, spotifyPath } from "@/lib/spotify/log";
+import {
+  longRateLimitWait,
+  rateLimitMessage,
+  spotifyFailureFields,
+  spotifyPath,
+} from "@/lib/spotify/log";
 import { mapSpotifyArtistSearch } from "@/lib/spotify/map-artist";
 import {
   type SpotifyAlbumGroup,
@@ -30,10 +35,26 @@ const SLOW_SPOTIFY_MS = 5_000;
 const RETRIED_STATUSES = new Set([408, 413, 429, 500, 502, 503, 504]);
 
 export class SpotifyClientError extends Error {
-  constructor() {
-    super("Spotify client error");
+  constructor(message = "Spotify client error") {
+    super(message);
     this.name = "SpotifyClientError";
   }
+}
+
+export class SpotifyRateLimitError extends SpotifyClientError {
+  readonly retryAfterSeconds: number;
+
+  constructor(retryAfterSeconds: number) {
+    super(rateLimitMessage(retryAfterSeconds));
+    this.name = "SpotifyRateLimitError";
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}
+
+export function spotifyClientMessage(error: SpotifyClientError): string {
+  return error instanceof SpotifyRateLimitError
+    ? error.message
+    : "Spotify failed. Try again.";
 }
 
 export class SpotifyClient {
@@ -202,6 +223,10 @@ export class SpotifyClient {
 
       return await response.json();
     } catch (error) {
+      if (error instanceof SpotifyRateLimitError) {
+        throw error;
+      }
+
       failed = true;
       console.error(
         "[spotify]",
@@ -272,14 +297,23 @@ function spotifyHooks() {
           return;
         }
 
+        const retryAfter = response.headers.get("retry-after");
         console.info("[spotify]", {
           event: "waiting",
           method: request.method,
           path: spotifyPath(request.url),
           status: response.status,
-          retryAfter: response.headers.get("retry-after"),
+          retryAfter,
           retryCount,
         });
+
+        if (response.status === 429) {
+          const waitSeconds = longRateLimitWait(retryAfter);
+
+          if (waitSeconds !== null) {
+            throw new SpotifyRateLimitError(waitSeconds);
+          }
+        }
       },
     ],
     beforeRetry: [

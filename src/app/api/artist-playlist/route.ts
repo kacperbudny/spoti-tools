@@ -2,7 +2,7 @@ import * as z from "zod";
 import { saveArtistPlaylist } from "@/lib/artist-playlist/save-playlist";
 import { encodeSavePlaylistStreamEvent } from "@/lib/artist-playlist/save-playlist-stream";
 import { SessionDeadError } from "@/lib/auth/errors";
-import { SpotifyClientError } from "@/lib/spotify/client";
+import { SpotifyClientError, spotifyClientMessage } from "@/lib/spotify/client";
 
 export const maxDuration = 300;
 
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
           controller.enqueue(
             encodeSavePlaylistStreamEvent({
               type: "error",
-              message: "Spotify failed. Try again.",
+              message: spotifyClientMessage(error),
             }),
           );
         } else {

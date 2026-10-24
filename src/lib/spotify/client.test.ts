@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, mock, spyOn, test } from "bun:test";
 import { HTTPError } from "ky";
 import { http } from "@/lib/http/ky";
-import { SpotifyClient, SpotifyClientError } from "@/lib/spotify/client";
+import {
+  SpotifyClient,
+  SpotifyClientError,
+  SpotifyRateLimitError,
+} from "@/lib/spotify/client";
 
 afterEach(() => {
   mock.restore();
@@ -160,5 +164,27 @@ describe("SpotifyClient", () => {
     expect(text).toContain("/v1/artists/ada/albums");
     expect(text).toContain("429");
     expect(text).not.toContain("super-secret-token");
+  });
+
+  test("a day-long rate limit fails instead of waiting", async () => {
+    spyOn(globalThis, "fetch").mockImplementation((async () =>
+      new Response(null, {
+        status: 429,
+        headers: { "retry-after": "82459" },
+      })) as unknown as typeof fetch);
+    const started = Date.now();
+
+    const error = await new SpotifyClient("token")
+      .getArtistAlbumsPage("ada", ["album"], 0)
+      .then(
+        () => null,
+        (caught: unknown) => caught,
+      );
+
+    expect(Date.now() - started).toBeLessThan(1_000);
+    expect(error).toBeInstanceOf(SpotifyRateLimitError);
+    expect(error instanceof Error ? error.message : "").toBe(
+      "Spotify is rate limiting requests. Try again in about 23 hours.",
+    );
   });
 });
