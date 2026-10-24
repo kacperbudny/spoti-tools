@@ -1,6 +1,6 @@
 "use client";
 
-import { ListMusic, Loader2 } from "lucide-react";
+import { Check, ListMusic, Loader2 } from "lucide-react";
 import type { FormEvent } from "react";
 import { useArtistPick } from "@/components/artist-playlist/use-artist-pick";
 import { useArtistSearch } from "@/components/artist-playlist/use-artist-search";
@@ -403,7 +403,8 @@ function PlaylistSavedScreen({
   return (
     <div className="flex w-full flex-col gap-6">
       <div className="flex flex-col gap-3">
-        <h2 className="font-heading text-3xl font-medium tracking-tight text-cta">
+        <h2 className="flex items-center gap-3 font-heading text-3xl font-medium tracking-tight text-cta">
+          <Check className="size-8 shrink-0" aria-hidden />
           Playlist successfully saved!
         </h2>
         <div className="flex items-center gap-4">
@@ -440,7 +441,7 @@ function PlaylistCover({ src, title }: { src: string; title: string }) {
     <img
       src={src}
       alt={`${title} cover`}
-      className="size-24 shrink-0 rounded-2xl object-cover"
+      className="size-32 shrink-0 rounded-lg object-cover"
     />
   );
 }

@@ -85,9 +85,11 @@ describe("ArtistPlaylistStage", () => {
       name: "Playlist successfully saved!",
     });
     expect(heading.className).toContain("text-cta");
+    expect(heading.querySelector("svg")).toBeTruthy();
     const cover = screen.getByRole("img", { name: "Ada discography cover" });
     expect(cover.getAttribute("src")).toBe("https://example.com/ada-cover.jpg");
-    expect(cover.className).toContain("size-24");
+    expect(cover.className).toContain("size-32");
+    expect(cover.className).toContain("rounded-lg");
     expect(cover.parentElement?.className).toContain("items-center");
     expect(screen.getByText("Ada discography")).toBeTruthy();
     expect(screen.getByText("12 songs")).toBeTruthy();
