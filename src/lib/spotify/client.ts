@@ -3,21 +3,55 @@ import type * as z from "zod";
 import type { Artist } from "@/lib/artist-playlist/artist";
 import { SessionDeadError } from "@/lib/auth/errors";
 import { http } from "@/lib/http/ky";
+import {
+  longRateLimitWait,
+  rateLimitMessage,
+  spotifyFailureFields,
+  spotifyPath,
+} from "@/lib/spotify/log";
 import { mapSpotifyArtistSearch } from "@/lib/spotify/map-artist";
 import {
+  type SpotifyAlbumGroup,
+  type SpotifyAlbumTracksPage,
+  type SpotifyArtistAlbumsPage,
+  type SpotifyCreatedPlaylist,
   type SpotifySavedAlbumsPage,
+  spotifyAlbumTracksPageSchema,
+  spotifyArtistAlbumsPageSchema,
   spotifyArtistSearchSchema,
+  spotifyCreatedPlaylistSchema,
+  spotifyPlaylistImagesSchema,
+  spotifyPlaylistSnapshotSchema,
   spotifySavedAlbumsPageSchema,
 } from "@/lib/spotify/types";
 
 const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
 const ARTIST_SEARCH_LIMIT = 10;
+const BLANK_PLAYLIST_DESCRIPTION = " ";
+const SLOW_SPOTIFY_MS = 5_000;
+const RETRIED_STATUSES = new Set([408, 413, 429, 500, 502, 503, 504]);
 
 export class SpotifyClientError extends Error {
-  constructor() {
-    super("Spotify client error");
+  constructor(message = "Spotify client error") {
+    super(message);
     this.name = "SpotifyClientError";
   }
+}
+
+export class SpotifyRateLimitError extends SpotifyClientError {
+  readonly retryAfterSeconds: number;
+
+  constructor(retryAfterSeconds: number) {
+    super(rateLimitMessage(retryAfterSeconds));
+    this.name = "SpotifyRateLimitError";
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}
+
+export function spotifyClientMessage(error: SpotifyClientError): string {
+  return error instanceof SpotifyRateLimitError
+    ? error.message
+    : "Spotify failed. Try again.";
 }
 
 export class SpotifyClient {
@@ -47,16 +81,142 @@ export class SpotifyClient {
     );
   }
 
-  private async callSpotify(url: URL): Promise<unknown> {
+  async getArtistAlbumsPage(
+    artistId: string,
+    includeGroups: readonly SpotifyAlbumGroup[],
+    offset: number,
+    limit = 10,
+  ): Promise<SpotifyArtistAlbumsPage> {
+    const url = new URL(`${SPOTIFY_API_BASE}/artists/${artistId}/albums`);
+    url.searchParams.set("include_groups", includeGroups.join(","));
+    url.searchParams.set("limit", String(limit));
+    url.searchParams.set("offset", String(offset));
+
+    const body = await this.callSpotify(url);
+    return this.parseSpotify(spotifyArtistAlbumsPageSchema, body);
+  }
+
+  async getAlbumTracksPage(
+    albumId: string,
+    offset: number,
+    limit = 50,
+  ): Promise<SpotifyAlbumTracksPage> {
+    const url = new URL(`${SPOTIFY_API_BASE}/albums/${albumId}/tracks`);
+    url.searchParams.set("limit", String(limit));
+    url.searchParams.set("offset", String(offset));
+
+    const body = await this.callSpotify(url);
+    return this.parseSpotify(spotifyAlbumTracksPageSchema, body);
+  }
+
+  async createPrivatePlaylist(name: string): Promise<SpotifyCreatedPlaylist> {
+    const url = new URL(`${SPOTIFY_API_BASE}/me/playlists`);
+    const body = await this.callSpotify(url, {
+      method: "POST",
+      json: {
+        name,
+        public: false,
+        collaborative: false,
+        description: BLANK_PLAYLIST_DESCRIPTION,
+      },
+    });
+    return this.parseSpotify(spotifyCreatedPlaylistSchema, body);
+  }
+
+  async setPlaylistDescription(playlistId: string): Promise<void> {
+    const url = new URL(`${SPOTIFY_API_BASE}/playlists/${playlistId}`);
+    await this.callSpotify(url, {
+      method: "PUT",
+      json: { description: BLANK_PLAYLIST_DESCRIPTION },
+      readBody: false,
+    });
+  }
+
+  async makePlaylistPrivate(playlistId: string, name: string): Promise<void> {
+    const url = new URL(`${SPOTIFY_API_BASE}/playlists/${playlistId}`);
+    await this.callSpotify(url, {
+      method: "PUT",
+      json: { name, public: false },
+      readBody: false,
+    });
+  }
+
+  async getPlaylistCoverUrl(playlistId: string): Promise<string | null> {
+    const url = new URL(`${SPOTIFY_API_BASE}/playlists/${playlistId}/images`);
+    const body = await this.callSpotify(url);
+    const images = this.parseSpotify(spotifyPlaylistImagesSchema, body);
+    return images[0]?.url ?? null;
+  }
+
+  async replacePlaylistItems(
+    playlistId: string,
+    uris: string[],
+  ): Promise<void> {
+    const url = new URL(`${SPOTIFY_API_BASE}/playlists/${playlistId}/items`);
+    const body = await this.callSpotify(url, {
+      method: "PUT",
+      json: { uris },
+    });
+    this.parseSpotify(spotifyPlaylistSnapshotSchema, body);
+  }
+
+  async appendPlaylistItems(playlistId: string, uris: string[]): Promise<void> {
+    const url = new URL(`${SPOTIFY_API_BASE}/playlists/${playlistId}/items`);
+    const body = await this.callSpotify(url, {
+      method: "POST",
+      json: { uris },
+    });
+    this.parseSpotify(spotifyPlaylistSnapshotSchema, body);
+  }
+
+  private async callSpotify(
+    url: URL,
+    init?: { method: "POST" | "PUT"; json: object; readBody?: boolean },
+  ): Promise<unknown> {
+    const headers = {
+      Authorization: `Bearer ${this.accessToken}`,
+    };
+    const method = init?.method ?? "GET";
+    const startedAt = Date.now();
+    let failed = false;
+
     try {
-      return await http
-        .get(url, {
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-        })
-        .json();
+      if (!init) {
+        return await http
+          .get(url, { headers, timeout: 20_000, hooks: spotifyHooks() })
+          .json();
+      }
+
+      const send = init.method === "POST" ? http.post : http.put;
+      const response = await send(url, {
+        headers,
+        json: init.json,
+        timeout: 20_000,
+        hooks: spotifyHooks(),
+      });
+
+      if (init.readBody === false) {
+        await response.text();
+        return null;
+      }
+
+      return await response.json();
     } catch (error) {
+      if (error instanceof SpotifyRateLimitError) {
+        throw error;
+      }
+
+      failed = true;
+      console.error(
+        "[spotify]",
+        spotifyFailureFields(
+          error,
+          method,
+          url.toString(),
+          Date.now() - startedAt,
+        ),
+      );
+
       if (error instanceof HTTPError) {
         const status = error.response.status;
 
@@ -65,7 +225,18 @@ export class SpotifyClient {
         }
       }
 
-      throw this.handleError(error);
+      throw new SpotifyClientError();
+    } finally {
+      const elapsedMs = Date.now() - startedAt;
+
+      if (!failed && elapsedMs >= SLOW_SPOTIFY_MS) {
+        console.info("[spotify]", {
+          event: "slow",
+          method,
+          path: spotifyPath(url.toString()),
+          elapsedMs,
+        });
+      }
     }
   }
 
@@ -81,7 +252,68 @@ export class SpotifyClient {
   }
 
   private handleError(error: unknown): SpotifyClientError {
-    console.error(error instanceof Error ? error.message : String(error));
+    if (!(error instanceof HTTPError)) {
+      console.error(error instanceof Error ? error.message : String(error));
+    }
+
     return new SpotifyClientError();
   }
+}
+
+function spotifyHooks() {
+  return {
+    afterResponse: [
+      ({
+        request,
+        response,
+        retryCount,
+      }: {
+        request: Request;
+        response: Response;
+        retryCount: number;
+      }) => {
+        if (!RETRIED_STATUSES.has(response.status)) {
+          return;
+        }
+
+        const retryAfter = response.headers.get("retry-after");
+        console.info("[spotify]", {
+          event: "waiting",
+          method: request.method,
+          path: spotifyPath(request.url),
+          status: response.status,
+          retryAfter,
+          retryCount,
+        });
+
+        if (response.status === 429) {
+          const waitSeconds = longRateLimitWait(retryAfter);
+
+          if (waitSeconds !== null) {
+            throw new SpotifyRateLimitError(waitSeconds);
+          }
+        }
+      },
+    ],
+    beforeRetry: [
+      ({
+        request,
+        error,
+        retryCount,
+      }: {
+        request: Request;
+        error: Error;
+        retryCount: number;
+      }) => {
+        console.info("[spotify]", {
+          event: "retry",
+          method: request.method,
+          path: spotifyPath(request.url),
+          status: error instanceof HTTPError ? error.response.status : null,
+          retryCount,
+          message: error.message,
+        });
+      },
+    ],
+  };
 }

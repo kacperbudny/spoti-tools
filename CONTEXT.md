@@ -51,7 +51,7 @@ Releases in a Discography that are someone else's, where this artist is credited
 _Avoid_: Features, appears on, guest spots
 
 **Track**:
-A recording on a Release. The same recording on another Release is the same Track.
+A Spotify track on a Release, identified by its Spotify track id. The same recording released again (a single, then its album) has a different Spotify track id and is a different Track.
 _Avoid_: Song
 
 **Artist playlist**:

@@ -1,7 +1,11 @@
 import { SessionDeadError } from "@/lib/auth/errors";
 import { getSpotifyAccessToken } from "@/lib/auth/session";
 import { encodeLibraryStreamEvent } from "@/lib/random-album/library-stream";
-import { SpotifyClient, SpotifyClientError } from "@/lib/spotify/client";
+import {
+  SpotifyClient,
+  SpotifyClientError,
+  spotifyClientMessage,
+} from "@/lib/spotify/client";
 import { loadSpotifyLibrary } from "@/lib/spotify/load-spotify-library";
 
 export async function GET() {
@@ -34,7 +38,7 @@ export async function GET() {
             encodeLibraryStreamEvent({
               type: "error",
               reason: "source-unavailable",
-              message: "Spotify failed. Try again.",
+              message: spotifyClientMessage(error),
             }),
           );
         } else {
