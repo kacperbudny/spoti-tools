@@ -17,10 +17,17 @@ const ARTIST_ALBUMS_PAGE_SIZE = 10;
 const ALBUM_TRACKS_PAGE_SIZE = 50;
 const REQUEST_CONCURRENCY = 4;
 
+export type DiscographyLoadProgress = {
+  stage: "releases" | "tracks" | "recordings";
+  loaded: number;
+  total: number;
+};
+
 export async function loadArtistDiscography(
   client: SpotifyClient,
   artistId: string,
   selection: ReleaseGroupSelection,
+  onProgress?: (progress: DiscographyLoadProgress) => void,
 ): Promise<Release[]> {
   const includeGroups = spotifyAlbumGroups(selection);
 
@@ -28,25 +35,51 @@ export async function loadArtistDiscography(
     return [];
   }
 
+  onProgress?.({
+    stage: "releases",
+    loaded: 0,
+    total: includeGroups.length,
+  });
+
+  let finishedGroups = 0;
   const groupedAlbums = (
     await Promise.all(
       includeGroups.map(async (albumGroup) => {
         const albums = await listArtistAlbums(client, artistId, [albumGroup]);
+        finishedGroups += 1;
+        onProgress?.({
+          stage: "releases",
+          loaded: finishedGroups,
+          total: includeGroups.length,
+        });
         const group = releaseGroupForAlbumGroup(albumGroup);
         return albums.map((album) => ({ album, group }));
       }),
     )
   ).flat();
+
+  onProgress?.({ stage: "tracks", loaded: 0, total: groupedAlbums.length });
+  let finishedAlbums = 0;
   const tracksByAlbum = await mapPool(
     groupedAlbums,
     REQUEST_CONCURRENCY,
-    ({ album }) => listAlbumTracks(client, album.id),
+    async ({ album }) => {
+      const tracks = await listAlbumTracks(client, album.id);
+      finishedAlbums += 1;
+      onProgress?.({
+        stage: "tracks",
+        loaded: finishedAlbums,
+        total: groupedAlbums.length,
+      });
+      return tracks;
+    },
   );
   const recordingIds = await loadRecordingIds(
     client,
     tracksByAlbum.flatMap((tracks) =>
       tracks.flatMap((track) => (track.id ? [track.id] : [])),
     ),
+    onProgress,
   );
 
   return groupedAlbums.map(({ album, group }, index) =>
@@ -110,8 +143,13 @@ async function listAlbumTracks(
 async function loadRecordingIds(
   client: SpotifyClient,
   trackIds: string[],
+  onProgress?: (progress: DiscographyLoadProgress) => void,
 ): Promise<Map<string, string>> {
-  const tracks = await client.getTracks([...new Set(trackIds)]);
+  const ids = [...new Set(trackIds)];
+  onProgress?.({ stage: "recordings", loaded: 0, total: ids.length });
+  const tracks = await client.getTracks(ids, (loaded) => {
+    onProgress?.({ stage: "recordings", loaded, total: ids.length });
+  });
   return recordingIdsByTrackId(tracks);
 }
 

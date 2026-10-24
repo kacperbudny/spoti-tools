@@ -1,5 +1,6 @@
 import * as z from "zod";
 import { saveArtistPlaylist } from "@/lib/artist-playlist/save-playlist";
+import { encodeSavePlaylistStreamEvent } from "@/lib/artist-playlist/save-playlist-stream";
 import { SessionDeadError } from "@/lib/auth/errors";
 import { SpotifyClientError } from "@/lib/spotify/client";
 
@@ -27,26 +28,42 @@ export async function POST(request: Request) {
     );
   }
 
-  try {
-    const result = await saveArtistPlaylist(parsed.data);
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      try {
+        const result = await saveArtistPlaylist(parsed.data, (progress) => {
+          controller.enqueue(
+            encodeSavePlaylistStreamEvent({ type: "progress", ...progress }),
+          );
+        });
+        controller.enqueue(
+          encodeSavePlaylistStreamEvent({ type: "result", result }),
+        );
+      } catch (error) {
+        if (error instanceof SessionDeadError) {
+          controller.enqueue(
+            encodeSavePlaylistStreamEvent({ type: "session-dead" }),
+          );
+        } else if (error instanceof SpotifyClientError) {
+          controller.enqueue(
+            encodeSavePlaylistStreamEvent({
+              type: "error",
+              message: "Spotify failed. Try again.",
+            }),
+          );
+        } else {
+          throw error;
+        }
+      }
 
-    return Response.json(result, {
-      headers: {
-        "Cache-Control": "private, no-store",
-      },
-    });
-  } catch (error) {
-    if (error instanceof SessionDeadError) {
-      return new Response(null, { status: 401 });
-    }
+      controller.close();
+    },
+  });
 
-    if (error instanceof SpotifyClientError) {
-      return Response.json(
-        { message: "Spotify failed. Try again." },
-        { status: 502 },
-      );
-    }
-
-    throw error;
-  }
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "application/x-ndjson",
+      "Cache-Control": "private, no-store",
+    },
+  });
 }

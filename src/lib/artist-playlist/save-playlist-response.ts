@@ -7,6 +7,8 @@ export const savePlaylistResponseSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("created"),
     url: z.string(),
+    title: z.string(),
+    trackCount: z.number().int().nonnegative(),
     truncated: z.boolean(),
   }),
   z.object({

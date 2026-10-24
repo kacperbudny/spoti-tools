@@ -1,12 +1,13 @@
 "use client";
 
-import { ListMusic } from "lucide-react";
+import { ListMusic, Loader2 } from "lucide-react";
 import type { FormEvent } from "react";
 import { useArtistPick } from "@/components/artist-playlist/use-artist-pick";
 import { useArtistSearch } from "@/components/artist-playlist/use-artist-search";
 import { useSavePlaylist } from "@/components/artist-playlist/use-save-playlist";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import type { Artist } from "@/lib/artist-playlist/artist";
 import {
@@ -79,6 +80,20 @@ function ArtistPlaylistConfigureStep({
   onChangeArtist: () => void;
   onToggle: (group: ReleaseGroup) => void;
 }) {
+  const save = useSavePlaylist(selection);
+
+  if (save.result?.kind === "created") {
+    return (
+      <PlaylistSavedScreen
+        title={save.result.title}
+        trackCount={save.result.trackCount}
+        url={save.result.url}
+        truncated={save.result.truncated}
+        onChooseAnother={onChangeArtist}
+      />
+    );
+  }
+
   return (
     <>
       <div className="flex w-full flex-col items-start gap-2">
@@ -90,6 +105,7 @@ function ArtistPlaylistConfigureStep({
         artist={artist}
         selection={selection}
         canSave={canSave}
+        save={save}
       />
     </>
   );
@@ -99,13 +115,13 @@ function SavePlaylistForm({
   artist,
   selection,
   canSave,
+  save,
 }: {
   artist: Artist;
   selection: ReleaseGroupSelection;
   canSave: boolean;
+  save: ReturnType<typeof useSavePlaylist>;
 }) {
-  const save = useSavePlaylist(selection);
-
   return (
     <>
       <SavePlaylistButton
@@ -119,6 +135,12 @@ function SavePlaylistForm({
           })
         }
       />
+      {save.isSaving ? (
+        <SavePlaylistProgress
+          label={save.progress?.label ?? "Retrieving the artist's songs"}
+          percent={save.progress?.percent ?? null}
+        />
+      ) : null}
       <SavePlaylistOutcome
         result={save.result}
         errorMessage={save.errorMessage}
@@ -302,12 +324,89 @@ function SavePlaylistButton({
     <Button
       type="button"
       size="lg"
-      className="h-12 w-full"
+      className="relative h-12 w-full overflow-hidden disabled:opacity-100"
       disabled={disabled}
+      aria-busy={pending}
       onClick={onSave}
     >
-      {pending ? "Saving…" : "Save"}
+      {pending ? <SaveButtonShimmer /> : null}
+      <span className="relative flex items-center gap-2">
+        {pending ? (
+          <span className="animate-spin">
+            <Loader2 />
+          </span>
+        ) : null}
+        {pending ? "Saving…" : "Save"}
+      </span>
     </Button>
+  );
+}
+
+function SaveButtonShimmer() {
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+    >
+      <span className="absolute inset-y-0 w-1/2 animate-[save-shimmer_1.4s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+    </span>
+  );
+}
+
+function SavePlaylistProgress({
+  label,
+  percent,
+}: {
+  label: string;
+  percent: number | null;
+}) {
+  return (
+    <div className="flex w-full flex-col gap-2">
+      <p aria-live="polite" className="text-sm text-muted-foreground">
+        {label}
+      </p>
+      <Progress value={percent} aria-label={label} className="w-full" />
+    </div>
+  );
+}
+
+function PlaylistSavedScreen({
+  title,
+  trackCount,
+  url,
+  truncated,
+  onChooseAnother,
+}: {
+  title: string;
+  trackCount: number;
+  url: string;
+  truncated: boolean;
+  onChooseAnother: () => void;
+}) {
+  return (
+    <div className="flex w-full flex-col gap-6">
+      <div className="flex flex-col gap-3">
+        <h2 className="font-heading text-3xl font-medium tracking-tight">
+          Playlist successfully saved
+        </h2>
+        <p className="text-lg">{title}</p>
+        <p className="text-muted-foreground">{songCount(trackCount)}</p>
+        {truncated ? (
+          <p className="text-sm text-muted-foreground">
+            The oldest 10,000 tracks were saved. The rest did not fit.
+          </p>
+        ) : null}
+      </div>
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        className={cn(buttonVariants({ size: "lg" }), "h-12 w-full")}
+      >
+        Open playlist on Spotify
+      </a>
+      <ChangeArtistButton onClick={onChooseAnother} />
+    </div>
   );
 }
 
@@ -332,11 +431,6 @@ function SavePlaylistOutcome({
           There is nothing to save.
         </output>
       ) : null}
-      {result?.kind === "created" && result.truncated ? (
-        <output className="block text-sm text-muted-foreground">
-          The oldest 10,000 tracks were saved. The rest did not fit.
-        </output>
-      ) : null}
       {playlistUrl ? (
         <a
           href={playlistUrl}
@@ -349,6 +443,10 @@ function SavePlaylistOutcome({
       ) : null}
     </>
   );
+}
+
+function songCount(count: number) {
+  return count === 1 ? "1 song" : `${count} songs`;
 }
 
 function SelectedArtist({ artist }: { artist: Artist }) {

@@ -36,4 +36,50 @@ describe("SpotifyClient", () => {
       { id: "track-2", external_ids: { isrc: "ISRC-track-2" } },
     ]);
   });
+
+  test("creates a private playlist with a blank description", async () => {
+    let body: unknown;
+    spyOn(http, "post").mockImplementation((_input, options) => {
+      body = options?.json;
+
+      return {
+        json: async () => ({
+          id: "playlist-1",
+          external_urls: {
+            spotify: "https://open.spotify.com/playlist/playlist-1",
+          },
+        }),
+      } as unknown as ReturnType<typeof http.post>;
+    });
+
+    await new SpotifyClient("token").createPrivatePlaylist("Ada discography");
+
+    expect(body).toEqual({
+      name: "Ada discography",
+      public: false,
+      description: " ",
+    });
+  });
+
+  test("replaces a missing description so Spotify does not show null", async () => {
+    let body: unknown;
+    let path = "";
+    spyOn(http, "put").mockImplementation((input, options) => {
+      const url =
+        input instanceof URL
+          ? input
+          : new URL(input instanceof Request ? input.url : String(input));
+      path = url.pathname;
+      body = options?.json;
+
+      return {
+        text: async () => "",
+      } as unknown as ReturnType<typeof http.put>;
+    });
+
+    await new SpotifyClient("token").blankPlaylistDescription("playlist-1");
+
+    expect(path).toBe("/v1/playlists/playlist-1");
+    expect(body).toEqual({ description: " " });
+  });
 });

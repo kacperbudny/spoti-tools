@@ -23,6 +23,7 @@ import {
 const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
 const ARTIST_SEARCH_LIMIT = 10;
 const TRACK_FETCH_CONCURRENCY = 4;
+const BLANK_PLAYLIST_DESCRIPTION = " ";
 
 export class SpotifyClientError extends Error {
   constructor() {
@@ -86,8 +87,16 @@ export class SpotifyClient {
     return this.parseSpotify(spotifyAlbumTracksPageSchema, body);
   }
 
-  async getTracks(ids: string[]): Promise<SpotifyFullTrack[]> {
-    return mapPool(ids, TRACK_FETCH_CONCURRENCY, (id) => this.getTrack(id));
+  async getTracks(
+    ids: string[],
+    onProgress?: (loaded: number) => void,
+  ): Promise<SpotifyFullTrack[]> {
+    return mapPool(
+      ids,
+      TRACK_FETCH_CONCURRENCY,
+      (id) => this.getTrack(id),
+      onProgress,
+    );
   }
 
   async getTrack(id: string): Promise<SpotifyFullTrack> {
@@ -100,9 +109,18 @@ export class SpotifyClient {
     const url = new URL(`${SPOTIFY_API_BASE}/me/playlists`);
     const body = await this.callSpotify(url, {
       method: "POST",
-      json: { name, public: false },
+      json: { name, public: false, description: BLANK_PLAYLIST_DESCRIPTION },
     });
     return this.parseSpotify(spotifyCreatedPlaylistSchema, body);
+  }
+
+  async blankPlaylistDescription(playlistId: string): Promise<void> {
+    const url = new URL(`${SPOTIFY_API_BASE}/playlists/${playlistId}`);
+    await this.callSpotify(url, {
+      method: "PUT",
+      json: { description: BLANK_PLAYLIST_DESCRIPTION },
+      readBody: false,
+    });
   }
 
   async replacePlaylistItems(
@@ -128,7 +146,7 @@ export class SpotifyClient {
 
   private async callSpotify(
     url: URL,
-    init?: { method: "POST" | "PUT"; json: object },
+    init?: { method: "POST" | "PUT"; json: object; readBody?: boolean },
   ): Promise<unknown> {
     const headers = {
       Authorization: `Bearer ${this.accessToken}`,
@@ -140,11 +158,18 @@ export class SpotifyClient {
       }
 
       const send = init.method === "POST" ? http.post : http.put;
-      return await send(url, {
+      const response = await send(url, {
         headers,
         json: init.json,
         timeout: 20_000,
-      }).json();
+      });
+
+      if (init.readBody === false) {
+        await response.text();
+        return null;
+      }
+
+      return await response.json();
     } catch (error) {
       if (error instanceof HTTPError) {
         const status = error.response.status;
@@ -179,9 +204,11 @@ async function mapPool<T, R>(
   items: T[],
   concurrency: number,
   mapper: (item: T) => Promise<R>,
+  onProgress?: (loaded: number) => void,
 ): Promise<R[]> {
   const results = new Array<R>(items.length);
   let next = 0;
+  let loaded = 0;
   const workers = Array.from(
     { length: Math.min(concurrency, items.length) },
     async () => {
@@ -189,6 +216,8 @@ async function mapPool<T, R>(
         const index = next;
         next += 1;
         results[index] = await mapper(items[index] as T);
+        loaded += 1;
+        onProgress?.(loaded);
       }
     },
   );

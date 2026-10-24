@@ -8,17 +8,24 @@ import {
   rememberPlaylist,
 } from "@/lib/artist-playlist/remember-playlist";
 import type { SavePlaylistResponse } from "@/lib/artist-playlist/save-playlist-response";
+import {
+  type SaveProgress,
+  saveProgress,
+} from "@/lib/artist-playlist/save-progress";
 import { SessionDeadError } from "@/lib/auth/errors";
 import { getSession, getSpotifyAccessToken } from "@/lib/auth/session";
 import { SpotifyClient } from "@/lib/spotify/client";
 
 const PLAYLIST_WRITE_CHUNK = 100;
 
-export async function saveArtistPlaylist(input: {
-  artistId: string;
-  artistName: string;
-  selection: ReleaseGroupSelection;
-}): Promise<SavePlaylistResponse> {
+export async function saveArtistPlaylist(
+  input: {
+    artistId: string;
+    artistName: string;
+    selection: ReleaseGroupSelection;
+  },
+  onProgress?: (progress: SaveProgress) => void,
+): Promise<SavePlaylistResponse> {
   const session = await getSession();
 
   if (!session) {
@@ -29,7 +36,9 @@ export async function saveArtistPlaylist(input: {
   const client = new SpotifyClient(accessToken);
   const [rememberedPlaylistId, releases] = await Promise.all([
     findRememberedPlaylistId(session.user.id, input.artistId),
-    loadArtistDiscography(client, input.artistId, input.selection),
+    loadArtistDiscography(client, input.artistId, input.selection, (update) => {
+      onProgress?.(saveProgress(update.stage, update.loaded, update.total));
+    }),
   ]);
   const plan = planArtistPlaylist({
     artistId: input.artistId,
@@ -44,23 +53,32 @@ export async function saveArtistPlaylist(input: {
   }
 
   if (plan.kind === "rewrite") {
+    await client.blankPlaylistDescription(plan.playlistId);
     return {
       kind: "rewrite",
       url: `https://open.spotify.com/playlist/${plan.playlistId}`,
     };
   }
 
+  const writeSteps = Math.ceil(plan.trackIds.length / PLAYLIST_WRITE_CHUNK) + 1;
+  onProgress?.(saveProgress("playlist", 0, writeSteps));
   const created = await client.createPrivatePlaylist(plan.title);
   await rememberPlaylist({
     userId: session.user.id,
     artistId: input.artistId,
     playlistId: created.id,
   });
-  await writePlaylistTracks(client, created.id, plan.trackIds);
+  await client.blankPlaylistDescription(created.id);
+  onProgress?.(saveProgress("playlist", 1, writeSteps));
+  await writePlaylistTracks(client, created.id, plan.trackIds, (written) => {
+    onProgress?.(saveProgress("playlist", written + 1, writeSteps));
+  });
 
   return {
     kind: "created",
     url: created.external_urls.spotify,
+    title: plan.title,
+    trackCount: plan.trackIds.length,
     truncated: plan.truncated,
   };
 }
@@ -69,6 +87,7 @@ async function writePlaylistTracks(
   client: SpotifyClient,
   playlistId: string,
   trackIds: string[],
+  onWritten?: (written: number) => void,
 ): Promise<void> {
   const uris = trackIds.map((id) => `spotify:track:${id}`);
   const [first, ...rest] = chunk(uris, PLAYLIST_WRITE_CHUNK);
@@ -78,9 +97,13 @@ async function writePlaylistTracks(
   }
 
   await client.replacePlaylistItems(playlistId, first);
+  onWritten?.(1);
 
+  let written = 1;
   for (const part of rest) {
     await client.appendPlaylistItems(playlistId, part);
+    written += 1;
+    onWritten?.(written);
   }
 }
 

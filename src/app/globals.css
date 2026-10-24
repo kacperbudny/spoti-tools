@@ -101,3 +101,12 @@
     background-color: var(--background);
   }
 }
+
+@keyframes save-shimmer {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(220%);
+  }
+}
