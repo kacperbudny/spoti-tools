@@ -64,7 +64,7 @@ describe("ArtistPlaylistStage", () => {
     expect(status.getAttribute("aria-live")).toBe("polite");
     expect(screen.getByRole("progressbar")).toBeTruthy();
     expect(
-      screen.queryByRole("heading", { name: "Playlist successfully saved" }),
+      screen.queryByRole("heading", { name: "Playlist successfully saved!" }),
     ).toBeNull();
   });
 
@@ -81,14 +81,14 @@ describe("ArtistPlaylistStage", () => {
     });
     render(<ArtistPlaylistStage />);
 
-    expect(
-      screen.getByRole("heading", { name: "Playlist successfully saved" }),
-    ).toBeTruthy();
-    expect(
-      screen
-        .getByRole("img", { name: "Ada discography cover" })
-        .getAttribute("src"),
-    ).toBe("https://example.com/ada-cover.jpg");
+    const heading = screen.getByRole("heading", {
+      name: "Playlist successfully saved!",
+    });
+    expect(heading.className).toContain("text-cta");
+    const cover = screen.getByRole("img", { name: "Ada discography cover" });
+    expect(cover.getAttribute("src")).toBe("https://example.com/ada-cover.jpg");
+    expect(cover.className).toContain("size-24");
+    expect(cover.parentElement?.className).toContain("items-center");
     expect(screen.getByText("Ada discography")).toBeTruthy();
     expect(screen.getByText("12 songs")).toBeTruthy();
     expect(
@@ -135,7 +135,7 @@ describe("ArtistPlaylistStage", () => {
     expect(screen.getByText("There is nothing to save.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Save" })).toBeTruthy();
     expect(
-      screen.queryByRole("heading", { name: "Playlist successfully saved" }),
+      screen.queryByRole("heading", { name: "Playlist successfully saved!" }),
     ).toBeNull();
   });
 

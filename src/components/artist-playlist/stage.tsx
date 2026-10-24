@@ -403,12 +403,16 @@ function PlaylistSavedScreen({
   return (
     <div className="flex w-full flex-col gap-6">
       <div className="flex flex-col gap-3">
-        <h2 className="font-heading text-3xl font-medium tracking-tight">
-          Playlist successfully saved
+        <h2 className="font-heading text-3xl font-medium tracking-tight text-cta">
+          Playlist successfully saved!
         </h2>
-        {coverUrl ? <PlaylistCover src={coverUrl} title={title} /> : null}
-        <p className="text-lg">{title}</p>
-        <p className="text-muted-foreground">{songCount(trackCount)}</p>
+        <div className="flex items-center gap-4">
+          {coverUrl ? <PlaylistCover src={coverUrl} title={title} /> : null}
+          <div className="flex min-w-0 flex-col gap-1">
+            <p className="text-lg">{title}</p>
+            <p className="text-muted-foreground">{songCount(trackCount)}</p>
+          </div>
+        </div>
         {truncated ? (
           <p className="text-sm text-muted-foreground">
             The oldest 10,000 tracks were saved. The rest did not fit.
@@ -436,7 +440,7 @@ function PlaylistCover({ src, title }: { src: string; title: string }) {
     <img
       src={src}
       alt={`${title} cover`}
-      className="aspect-square w-full rounded-2xl object-cover"
+      className="size-24 shrink-0 rounded-2xl object-cover"
     />
   );
 }
