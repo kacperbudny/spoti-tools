@@ -423,7 +423,7 @@ function PlaylistSavedScreen({
               href={url}
               target="_blank"
               rel="noreferrer"
-              className="text-lg underline-offset-4 hover:underline"
+              className="text-xl underline-offset-4 hover:underline"
             >
               {title}
             </a>
