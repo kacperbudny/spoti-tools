@@ -15,13 +15,14 @@ import {
   spotifyArtistAlbumsPageSchema,
   spotifyArtistSearchSchema,
   spotifyCreatedPlaylistSchema,
+  spotifyFullTrackSchema,
   spotifyPlaylistSnapshotSchema,
   spotifySavedAlbumsPageSchema,
-  spotifyTracksSchema,
 } from "@/lib/spotify/types";
 
 const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
 const ARTIST_SEARCH_LIMIT = 10;
+const TRACK_FETCH_CONCURRENCY = 4;
 
 export class SpotifyClientError extends Error {
   constructor() {
@@ -85,16 +86,14 @@ export class SpotifyClient {
     return this.parseSpotify(spotifyAlbumTracksPageSchema, body);
   }
 
-  async getTracks(ids: string[]): Promise<Array<SpotifyFullTrack | null>> {
-    if (ids.length === 0) {
-      return [];
-    }
+  async getTracks(ids: string[]): Promise<SpotifyFullTrack[]> {
+    return mapPool(ids, TRACK_FETCH_CONCURRENCY, (id) => this.getTrack(id));
+  }
 
-    const url = new URL(`${SPOTIFY_API_BASE}/tracks`);
-    url.searchParams.set("ids", ids.join(","));
-
+  async getTrack(id: string): Promise<SpotifyFullTrack> {
+    const url = new URL(`${SPOTIFY_API_BASE}/tracks/${id}`);
     const body = await this.callSpotify(url);
-    return this.parseSpotify(spotifyTracksSchema, body).tracks;
+    return this.parseSpotify(spotifyFullTrackSchema, body);
   }
 
   async createPrivatePlaylist(name: string): Promise<SpotifyCreatedPlaylist> {
@@ -174,4 +173,26 @@ export class SpotifyClient {
     console.error(error instanceof Error ? error.message : String(error));
     return new SpotifyClientError();
   }
+}
+
+async function mapPool<T, R>(
+  items: T[],
+  concurrency: number,
+  mapper: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  const workers = Array.from(
+    { length: Math.min(concurrency, items.length) },
+    async () => {
+      while (next < items.length) {
+        const index = next;
+        next += 1;
+        results[index] = await mapper(items[index] as T);
+      }
+    },
+  );
+
+  await Promise.all(workers);
+  return results;
 }

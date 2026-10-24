@@ -84,10 +84,6 @@ export const spotifyFullTrackSchema = z.object({
     .nullish(),
 });
 
-export const spotifyTracksSchema = z.object({
-  tracks: z.array(spotifyFullTrackSchema.nullable()),
-});
-
 export const spotifyCreatedPlaylistSchema = z.object({
   id: z.string(),
   external_urls: z.object({

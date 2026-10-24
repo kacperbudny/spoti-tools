@@ -15,7 +15,6 @@ import type {
 
 const ARTIST_ALBUMS_PAGE_SIZE = 10;
 const ALBUM_TRACKS_PAGE_SIZE = 50;
-const RECORDING_BATCH = 50;
 const REQUEST_CONCURRENCY = 4;
 
 export async function loadArtistDiscography(
@@ -112,25 +111,8 @@ async function loadRecordingIds(
   client: SpotifyClient,
   trackIds: string[],
 ): Promise<Map<string, string>> {
-  const uniqueIds = [...new Set(trackIds)];
-  const batches: string[][] = [];
-
-  for (let index = 0; index < uniqueIds.length; index += RECORDING_BATCH) {
-    batches.push(uniqueIds.slice(index, index + RECORDING_BATCH));
-  }
-
-  const pages = await mapPool(batches, REQUEST_CONCURRENCY, (batch) =>
-    client.getTracks(batch),
-  );
-  const recordingIds = new Map<string, string>();
-
-  for (const page of pages) {
-    for (const [trackId, recordingId] of recordingIdsByTrackId(page)) {
-      recordingIds.set(trackId, recordingId);
-    }
-  }
-
-  return recordingIds;
+  const tracks = await client.getTracks([...new Set(trackIds)]);
+  return recordingIdsByTrackId(tracks);
 }
 
 async function mapPool<T, R>(
