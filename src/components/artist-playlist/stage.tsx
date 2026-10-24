@@ -1,11 +1,14 @@
 "use client";
 
-import { ListMusic } from "lucide-react";
+import { CircleCheck, ListMusic, Loader2 } from "lucide-react";
 import type { FormEvent } from "react";
 import { useArtistPick } from "@/components/artist-playlist/use-artist-pick";
 import { useArtistSearch } from "@/components/artist-playlist/use-artist-search";
-import { Button } from "@/components/ui/button";
+import { useSavePlaylist } from "@/components/artist-playlist/use-save-playlist";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import type { Artist } from "@/lib/artist-playlist/artist";
 import {
@@ -14,6 +17,8 @@ import {
   type ReleaseGroup,
   type ReleaseGroupSelection,
 } from "@/lib/artist-playlist/release-groups";
+import type { SavePlaylistResponse } from "@/lib/artist-playlist/save-playlist-response";
+import type { SaveProgress } from "@/lib/artist-playlist/save-progress";
 import { cn } from "@/lib/utils";
 
 export function ArtistPlaylistStage() {
@@ -46,6 +51,10 @@ export function ArtistPlaylistStage() {
           selection={pick.selection}
           canSave={pick.canSave}
           onChangeArtist={pick.clearPick}
+          onCreateAnother={() => {
+            search.reset();
+            pick.clearPick();
+          }}
           onToggle={pick.handleToggle}
         />
       ) : (
@@ -69,22 +78,79 @@ function ArtistPlaylistConfigureStep({
   selection,
   canSave,
   onChangeArtist,
+  onCreateAnother,
   onToggle,
 }: {
   artist: Artist;
   selection: ReleaseGroupSelection;
   canSave: boolean;
   onChangeArtist: () => void;
+  onCreateAnother: () => void;
   onToggle: (group: ReleaseGroup) => void;
 }) {
+  const save = useSavePlaylist(selection);
+
+  if (save.result?.kind === "created") {
+    return (
+      <PlaylistSavedScreen
+        title={save.result.title}
+        trackCount={save.result.trackCount}
+        coverUrl={save.result.coverUrl}
+        url={save.result.url}
+        truncated={save.result.truncated}
+        onCreateAnother={onCreateAnother}
+      />
+    );
+  }
+
   return (
     <>
       <div className="flex w-full flex-col items-start gap-2">
         <SelectedArtist artist={artist} />
-        <ChangeArtistButton onClick={onChangeArtist} />
+        <ChangeArtistButton onClick={onChangeArtist}>
+          Choose a different artist
+        </ChangeArtistButton>
       </div>
       <ReleaseGroupFieldset selection={selection} onToggle={onToggle} />
-      <SavePlaylistButton disabled={!canSave} />
+      <SavePlaylistForm
+        artist={artist}
+        selection={selection}
+        canSave={canSave}
+        save={save}
+      />
+    </>
+  );
+}
+
+function SavePlaylistForm({
+  artist,
+  selection,
+  canSave,
+  save,
+}: {
+  artist: Artist;
+  selection: ReleaseGroupSelection;
+  canSave: boolean;
+  save: ReturnType<typeof useSavePlaylist>;
+}) {
+  return (
+    <>
+      <SavePlaylistButton
+        disabled={!canSave || save.isSaving}
+        pending={save.isSaving}
+        onSave={() =>
+          save.save({
+            artistId: artist.id,
+            artistName: artist.name,
+            selection,
+          })
+        }
+      />
+      {save.isSaving ? <SavePlaylistProgress progress={save.progress} /> : null}
+      <SavePlaylistOutcome
+        result={save.result}
+        errorMessage={save.errorMessage}
+      />
     </>
   );
 }
@@ -196,7 +262,13 @@ function ArtistMatchList({
   );
 }
 
-function ChangeArtistButton({ onClick }: { onClick: () => void }) {
+function ChangeArtistButton({
+  onClick,
+  children,
+}: {
+  onClick: () => void;
+  children: string;
+}) {
   return (
     <Button
       type="button"
@@ -204,7 +276,7 @@ function ChangeArtistButton({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       className="text-muted-foreground"
     >
-      Choose a different artist
+      {children}
     </Button>
   );
 }
@@ -251,12 +323,202 @@ function ReleaseGroupFieldset({
   );
 }
 
-function SavePlaylistButton({ disabled }: { disabled: boolean }) {
+function SavePlaylistButton({
+  disabled,
+  pending,
+  onSave,
+}: {
+  disabled: boolean;
+  pending: boolean;
+  onSave: () => void;
+}) {
   return (
-    <Button type="button" size="lg" className="h-12 w-full" disabled={disabled}>
-      Save
+    <Button
+      type="button"
+      size="lg"
+      className="relative h-12 w-full overflow-hidden disabled:opacity-100"
+      disabled={disabled}
+      aria-busy={pending}
+      onClick={onSave}
+    >
+      {pending ? <SaveButtonShimmer /> : null}
+      <span className="relative flex items-center gap-2">
+        {pending ? (
+          <span className="animate-spin">
+            <Loader2 />
+          </span>
+        ) : null}
+        {pending ? "Saving…" : "Save"}
+      </span>
     </Button>
   );
+}
+
+function SaveButtonShimmer() {
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+    >
+      <span className="absolute inset-y-0 w-1/2 animate-[save-shimmer_1.4s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+    </span>
+  );
+}
+
+function SavePlaylistProgress({ progress }: { progress: SaveProgress | null }) {
+  const label = saveStatusLabel(progress);
+
+  return (
+    <div className="flex w-full flex-col gap-2">
+      <p
+        aria-live="polite"
+        className="animate-pulse text-sm text-muted-foreground"
+      >
+        {label}
+      </p>
+      {progress ? (
+        <Progress
+          value={progress.percent}
+          aria-label={label}
+          className="w-full"
+        />
+      ) : (
+        <Skeleton className="h-2 w-full" />
+      )}
+    </div>
+  );
+}
+
+function saveStatusLabel(progress: SaveProgress | null): string {
+  if (!progress) {
+    return "Retrieving the artist's songs";
+  }
+
+  if (
+    progress.loaded !== null &&
+    progress.total !== null &&
+    progress.total > 0
+  ) {
+    return `${progress.label}: ${progress.loaded} out of ${progress.total}…`;
+  }
+
+  return progress.label;
+}
+
+function PlaylistSavedScreen({
+  title,
+  trackCount,
+  coverUrl,
+  url,
+  truncated,
+  onCreateAnother,
+}: {
+  title: string;
+  trackCount: number;
+  coverUrl: string | null;
+  url: string;
+  truncated: boolean;
+  onCreateAnother: () => void;
+}) {
+  return (
+    <div className="flex w-full flex-col gap-6">
+      <div className="flex flex-col gap-3">
+        <h2 className="flex items-center gap-3 font-heading text-3xl font-medium tracking-tight">
+          <CircleCheck className="size-8 shrink-0 text-cta" aria-hidden />
+          Playlist successfully saved!
+        </h2>
+        <div className="flex items-center gap-4">
+          {coverUrl ? (
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              className="shrink-0 rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+            >
+              <PlaylistCover src={coverUrl} title={title} />
+            </a>
+          ) : null}
+          <div className="flex min-w-0 flex-col gap-1">
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xl underline-offset-4 hover:underline"
+            >
+              {title}
+            </a>
+            <p className="text-muted-foreground">{songCount(trackCount)}</p>
+          </div>
+        </div>
+        {truncated ? (
+          <p className="text-sm text-muted-foreground">
+            The oldest 10,000 tracks were saved. The rest did not fit.
+          </p>
+        ) : null}
+      </div>
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        className={cn(buttonVariants({ size: "lg" }), "h-12 w-full")}
+      >
+        Open playlist on Spotify
+      </a>
+      <ChangeArtistButton onClick={onCreateAnother}>
+        Create another playlist
+      </ChangeArtistButton>
+    </div>
+  );
+}
+
+function PlaylistCover({ src, title }: { src: string; title: string }) {
+  return (
+    // biome-ignore lint/performance/noImgElement: Spotify playlist covers are external and dynamic.
+    <img
+      src={src}
+      alt={`${title} cover`}
+      className="size-32 shrink-0 rounded-lg object-cover"
+    />
+  );
+}
+
+function SavePlaylistOutcome({
+  result,
+  errorMessage,
+}: {
+  result: SavePlaylistResponse | null;
+  errorMessage: string | null;
+}) {
+  const playlistUrl = result && result.kind !== "nothing" ? result.url : null;
+
+  return (
+    <>
+      {errorMessage ? (
+        <p role="alert" className="text-sm text-destructive">
+          {errorMessage}
+        </p>
+      ) : null}
+      {result?.kind === "nothing" ? (
+        <output className="block text-sm text-muted-foreground">
+          There is nothing to save.
+        </output>
+      ) : null}
+      {playlistUrl ? (
+        <a
+          href={playlistUrl}
+          target="_blank"
+          rel="noreferrer"
+          className={cn(buttonVariants({ size: "lg" }), "h-12 w-full")}
+        >
+          Open playlist on Spotify
+        </a>
+      ) : null}
+    </>
+  );
+}
+
+function songCount(count: number) {
+  return count === 1 ? "1 song" : `${count} songs`;
 }
 
 function SelectedArtist({ artist }: { artist: Artist }) {
