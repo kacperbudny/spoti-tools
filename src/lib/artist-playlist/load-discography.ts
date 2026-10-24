@@ -4,6 +4,7 @@ import type { SpotifyClient } from "@/lib/spotify/client";
 import {
   mapDiscographyRelease,
   recordingIdsByTrackId,
+  releaseGroupForAlbumGroup,
   spotifyAlbumGroups,
 } from "@/lib/spotify/map-discography";
 import type {
@@ -28,9 +29,19 @@ export async function loadArtistDiscography(
     return [];
   }
 
-  const albums = await listArtistAlbums(client, artistId, includeGroups);
-  const tracksByAlbum = await mapPool(albums, REQUEST_CONCURRENCY, (album) =>
-    listAlbumTracks(client, album.id),
+  const groupedAlbums = (
+    await Promise.all(
+      includeGroups.map(async (albumGroup) => {
+        const albums = await listArtistAlbums(client, artistId, [albumGroup]);
+        const group = releaseGroupForAlbumGroup(albumGroup);
+        return albums.map((album) => ({ album, group }));
+      }),
+    )
+  ).flat();
+  const tracksByAlbum = await mapPool(
+    groupedAlbums,
+    REQUEST_CONCURRENCY,
+    ({ album }) => listAlbumTracks(client, album.id),
   );
   const recordingIds = await loadRecordingIds(
     client,
@@ -39,8 +50,13 @@ export async function loadArtistDiscography(
     ),
   );
 
-  return albums.map((album, index) =>
-    mapDiscographyRelease(album, tracksByAlbum[index] ?? [], recordingIds),
+  return groupedAlbums.map(({ album, group }, index) =>
+    mapDiscographyRelease(
+      album,
+      group,
+      tracksByAlbum[index] ?? [],
+      recordingIds,
+    ),
   );
 }
 

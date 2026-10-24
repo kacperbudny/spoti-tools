@@ -54,7 +54,6 @@ export const spotifyReleaseDatePrecisionSchema = z.enum([
 export const spotifyArtistAlbumSchema = z.object({
   id: z.string(),
   name: z.string(),
-  album_group: spotifyAlbumGroupSchema,
   release_date: z.string(),
   release_date_precision: spotifyReleaseDatePrecisionSchema,
 });

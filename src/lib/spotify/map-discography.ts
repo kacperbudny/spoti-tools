@@ -1,6 +1,7 @@
 import type { Release, Track } from "@/lib/artist-playlist/release";
 import {
   RELEASE_GROUPS,
+  type ReleaseGroup,
   type ReleaseGroupSelection,
 } from "@/lib/artist-playlist/release-groups";
 import type {
@@ -16,6 +17,12 @@ export function spotifyAlbumGroups(
   return RELEASE_GROUPS.filter((group) => selection[group]).map((group) =>
     group === "appearances" ? "appears_on" : group,
   );
+}
+
+export function releaseGroupForAlbumGroup(
+  group: SpotifyAlbumGroup,
+): ReleaseGroup {
+  return group === "appears_on" ? "appearances" : group;
 }
 
 export function recordingIdsByTrackId(
@@ -36,14 +43,14 @@ export function recordingIdsByTrackId(
 
 export function mapDiscographyRelease(
   album: SpotifyArtistAlbum,
+  group: ReleaseGroup,
   tracks: SpotifyAlbumTrack[],
   recordingIds: ReadonlyMap<string, string>,
 ): Release {
   return {
     id: album.id,
     name: album.name,
-    group:
-      album.album_group === "appears_on" ? "appearances" : album.album_group,
+    group,
     releaseDate: album.release_date,
     releaseDatePrecision: album.release_date_precision,
     tracks: tracks.flatMap((track) => mapTrack(track, recordingIds)),
