@@ -51,7 +51,12 @@ export async function requestSavePlaylist(
   for await (const event of readSavePlaylistEvents(response.body)) {
     switch (event.type) {
       case "progress":
-        onProgress?.({ label: event.label, percent: event.percent });
+        onProgress?.({
+          label: event.label,
+          percent: event.percent,
+          loaded: event.loaded,
+          total: event.total,
+        });
         break;
       case "result":
         return event.result;

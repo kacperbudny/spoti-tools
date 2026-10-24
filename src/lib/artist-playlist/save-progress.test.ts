@@ -7,6 +7,18 @@ describe("saveProgress", () => {
       "Retrieving the artist's songs",
     );
     expect(saveProgress("playlist", 0, 2).label).toBe("Saving the playlist");
+    expect(saveProgress("recordings", 23, 153)).toMatchObject({
+      loaded: 23,
+      total: 153,
+    });
+    expect(saveProgress("releases", 1, 4)).toMatchObject({
+      loaded: null,
+      total: null,
+    });
+    expect(saveProgress("playlist", 1, 2)).toMatchObject({
+      loaded: null,
+      total: null,
+    });
   });
 
   test("fills each stage in order without moving backward", () => {

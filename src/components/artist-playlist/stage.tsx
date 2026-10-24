@@ -8,6 +8,7 @@ import { useSavePlaylist } from "@/components/artist-playlist/use-save-playlist"
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import type { Artist } from "@/lib/artist-playlist/artist";
 import {
@@ -17,6 +18,7 @@ import {
   type ReleaseGroupSelection,
 } from "@/lib/artist-playlist/release-groups";
 import type { SavePlaylistResponse } from "@/lib/artist-playlist/save-playlist-response";
+import type { SaveProgress } from "@/lib/artist-playlist/save-progress";
 import { cn } from "@/lib/utils";
 
 export function ArtistPlaylistStage() {
@@ -144,12 +146,7 @@ function SavePlaylistForm({
           })
         }
       />
-      {save.isSaving ? (
-        <SavePlaylistProgress
-          label={save.progress?.label ?? "Retrieving the artist's songs"}
-          percent={save.progress?.percent ?? null}
-        />
-      ) : null}
+      {save.isSaving ? <SavePlaylistProgress progress={save.progress} /> : null}
       <SavePlaylistOutcome
         result={save.result}
         errorMessage={save.errorMessage}
@@ -368,21 +365,44 @@ function SaveButtonShimmer() {
   );
 }
 
-function SavePlaylistProgress({
-  label,
-  percent,
-}: {
-  label: string;
-  percent: number | null;
-}) {
+function SavePlaylistProgress({ progress }: { progress: SaveProgress | null }) {
+  const label = saveStatusLabel(progress);
+
   return (
     <div className="flex w-full flex-col gap-2">
-      <p aria-live="polite" className="text-sm text-muted-foreground">
+      <p
+        aria-live="polite"
+        className="animate-pulse text-sm text-muted-foreground"
+      >
         {label}
       </p>
-      <Progress value={percent} aria-label={label} className="w-full" />
+      {progress ? (
+        <Progress
+          value={progress.percent}
+          aria-label={label}
+          className="w-full"
+        />
+      ) : (
+        <Skeleton className="h-2 w-full" />
+      )}
     </div>
   );
+}
+
+function saveStatusLabel(progress: SaveProgress | null): string {
+  if (!progress) {
+    return "Retrieving the artist's songs";
+  }
+
+  if (
+    progress.loaded !== null &&
+    progress.total !== null &&
+    progress.total > 0
+  ) {
+    return `${progress.label}: ${progress.loaded} out of ${progress.total}…`;
+  }
+
+  return progress.label;
 }
 
 function PlaylistSavedScreen({

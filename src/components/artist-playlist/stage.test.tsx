@@ -53,6 +53,8 @@ describe("ArtistPlaylistStage", () => {
       progress: {
         label: "Retrieving the artist's songs",
         percent: 60,
+        loaded: 23,
+        total: 153,
       },
     });
     render(<ArtistPlaylistStage />);
@@ -60,12 +62,25 @@ describe("ArtistPlaylistStage", () => {
     const button = screen.getByRole("button", { name: "Saving…" });
     expect(button.getAttribute("aria-busy")).toBe("true");
     expect((button as HTMLButtonElement).disabled).toBe(true);
-    const status = screen.getByText("Retrieving the artist's songs");
+    const status = screen.getByText(
+      "Retrieving the artist's songs: 23 out of 153…",
+    );
     expect(status.getAttribute("aria-live")).toBe("polite");
+    expect(status.className).toContain("animate-pulse");
     expect(screen.getByRole("progressbar")).toBeTruthy();
     expect(
       screen.queryByRole("heading", { name: "Playlist successfully saved!" }),
     ).toBeNull();
+  });
+
+  test("saving pulses the status until the song count arrives", () => {
+    save = idleSave({ isSaving: true });
+    render(<ArtistPlaylistStage />);
+
+    const status = screen.getByText("Retrieving the artist's songs");
+    expect(status.getAttribute("aria-live")).toBe("polite");
+    expect(status.className).toContain("animate-pulse");
+    expect(screen.queryByRole("progressbar")).toBeNull();
   });
 
   test("a saved playlist replaces the form with the title, song count, and link", () => {

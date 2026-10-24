@@ -10,6 +10,8 @@ export type SaveProgressStage = keyof typeof STAGE_RANGE;
 export type SaveProgress = {
   label: string;
   percent: number;
+  loaded: number | null;
+  total: number | null;
 };
 
 export function saveProgress(
@@ -19,6 +21,7 @@ export function saveProgress(
 ): SaveProgress {
   const [start, end] = STAGE_RANGE[stage];
   const ratio = total <= 0 ? 0 : Math.min(1, Math.max(0, loaded / total));
+  const countingSongs = stage === "recordings";
 
   return {
     label:
@@ -26,5 +29,7 @@ export function saveProgress(
         ? "Saving the playlist"
         : "Retrieving the artist's songs",
     percent: Math.round(start + (end - start) * ratio),
+    loaded: countingSongs ? loaded : null,
+    total: countingSongs ? total : null,
   };
 }

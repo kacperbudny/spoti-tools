@@ -10,6 +10,8 @@ describe("save playlist stream", () => {
       type: "progress",
       label: "Retrieving the artist's songs",
       percent: 30,
+      loaded: 4,
+      total: 8,
     });
     const created = encodeSavePlaylistStreamEvent({
       type: "result",
@@ -32,6 +34,8 @@ describe("save playlist stream", () => {
         type: "progress",
         label: "Retrieving the artist's songs",
         percent: 30,
+        loaded: 4,
+        total: 8,
       },
       {
         type: "result",

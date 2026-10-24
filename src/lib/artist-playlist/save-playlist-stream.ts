@@ -6,6 +6,8 @@ export const savePlaylistStreamEventSchema = z.discriminatedUnion("type", [
     type: z.literal("progress"),
     label: z.string(),
     percent: z.number().min(0).max(100),
+    loaded: z.number().int().nonnegative().nullable(),
+    total: z.number().int().nonnegative().nullable(),
   }),
   z.object({
     type: z.literal("result"),
